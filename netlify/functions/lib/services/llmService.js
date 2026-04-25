@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import { atsProfiles } from "../scoring/atsProfiles.js";
+import { badRequest } from "../http/errors.js";
 
 function safeJsonParse(s) {
   const str = String(s || "").trim();
@@ -53,7 +54,7 @@ function buildPrompt({ cvText, jdText, atsType }) {
 export async function optimizeResume({ cvText, jdText, atsType }) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing GROQ_API_KEY env var.");
+    throw badRequest("Missing GROQ_API_KEY env var.");
   }
 
   const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
@@ -100,4 +101,3 @@ export async function optimizeResume({ cvText, jdText, atsType }) {
     }
   };
 }
-

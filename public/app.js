@@ -1,4 +1,6 @@
-const API_BASE = "/api";
+// Use Netlify Functions path directly to avoid redirect issues in local/prod.
+// (Redirects in `public/_redirects` still allow `/api/*` to work in production.)
+const API_BASE = "/.netlify/functions/api";
 
 const { useEffect, useMemo, useRef, useState } = React;
 const html = htm.bind(React.createElement);

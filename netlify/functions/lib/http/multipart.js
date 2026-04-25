@@ -1,9 +1,10 @@
 import Busboy from "busboy";
+import { badRequest } from "./errors.js";
 
 export function parseMultipart(req, { maxFileBytes = 6 * 1024 * 1024 } = {}) {
   const contentType = req.headers["content-type"] || "";
   if (!contentType.includes("multipart/form-data")) {
-    return Promise.reject(new Error("Content-Type must be multipart/form-data"));
+    return Promise.reject(badRequest("Content-Type must be multipart/form-data"));
   }
 
   return new Promise((resolve, reject) => {
@@ -31,7 +32,7 @@ export function parseMultipart(req, { maxFileBytes = 6 * 1024 * 1024 } = {}) {
       });
 
       stream.on("limit", () => {
-        reject(new Error("File too large."));
+        reject(badRequest("File too large."));
       });
 
       stream.on("error", (e) => reject(e));
@@ -43,7 +44,25 @@ export function parseMultipart(req, { maxFileBytes = 6 * 1024 * 1024 } = {}) {
       resolve({ fields, file, bytes: fileBytes });
     });
 
-    req.pipe(bb);
+    // serverless-http may not always provide a readable stream.
+    try {
+      if (typeof req.pipe === "function" && req.readable !== false) {
+        req.pipe(bb);
+        return;
+      }
+    } catch {
+      // fall through
+    }
+
+    const fallback = req.body || req.rawBody;
+    if (!fallback) {
+      reject(badRequest("Missing multipart body."));
+      return;
+    }
+
+    const buf = Buffer.isBuffer(fallback)
+      ? fallback
+      : Buffer.from(String(fallback), "utf8");
+    bb.end(buf);
   });
 }
-
