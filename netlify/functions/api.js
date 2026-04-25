@@ -102,9 +102,25 @@ app.post("/optimize", async (req, res) => {
   }
 });
 
-const handler = serverless(app, {
+const serverlessHandler = serverless(app, {
   basePath: "/.netlify/functions/api"
 });
 
-export default async (event, context) => handler(event, context);
+// Netlify expects a named export called `handler`.
+// Keep a default export too for compatibility with some local runners.
+export const handler = async (event, context) => {
+  try {
+    return await serverlessHandler(event, context);
+  } catch (err) {
+    // Ensures Netlify logs show the underlying error instead of a generic 502.
+    // eslint-disable-next-line no-console
+    console.error("Function crash:", err);
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Function crashed", details: err?.message ?? String(err) })
+    };
+  }
+};
 
+export default handler;
