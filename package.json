@@ -1,0 +1,23 @@
+{
+  "name": "ats-resume-optimizer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node -e \"console.log('Static frontend: no build step')\"",
+    "netlify:dev": "netlify dev"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "groq-sdk": "^0.12.0",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^18.0.2"
+  }
+}
