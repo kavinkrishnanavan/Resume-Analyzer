@@ -1,31 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>OpenRouter Test</title>
+  <title>Resume Analyzer</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+    button { padding: 10px; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
-  <h2>Test OpenRouter via Netlify Function</h2>
 
-  <input id="prompt" placeholder="Enter prompt" size="50" />
-  <button onclick="send()">Send</button>
+<h2>Resume Analyzer</h2>
 
-  <pre id="output"></pre>
+<h4>Resume</h4>
+<textarea id="resume" placeholder="Paste resume here..."></textarea>
 
-  <script>
-    async function send() {
-      const prompt = document.getElementById("prompt").value;
+<h4>Job Description</h4>
+<textarea id="job" placeholder="Paste job description here..."></textarea>
 
-      const res = await fetch("/.netlify/functions/openrouter", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ prompt })
-      });
+<button onclick="analyze()">Analyze</button>
 
-      const data = await res.json();
-      document.getElementById("output").textContent = data.output || JSON.stringify(data, null, 2);
-    }
-  </script>
+<pre id="output"></pre>
+
+<script>
+async function analyze() {
+  const resume = document.getElementById("resume").value;
+  const job = document.getElementById("job").value;
+
+  const prompt = `
+You are an advanced ATS + recruiter-level resume analyzer.
+
+You will:
+1. Evaluate the resume against the job description
+2. Score each factor from 0–100
+3. Add NEW relevant factors if needed (based on job description)
+4. Keep factor names short and lowercase
+
+STRICT RULES:
+- Return ONLY valid JSON
+- No explanation
+- No text outside JSON
+- All values must be numbers (0–100)
+
+Base factors:
+innovation, strategic thinking, high quality, competitive, proactively, judgment, job level match, measurable results, paragraph length, resume tone, web presence, font check layout, page setup, contact information, summary, section headings, job title match, date formatting, education match, engagement, technical, content, design, multi-platform, product development, product lifecycle management, product planning
+
+Output format:
+{
+  "innovation": 0,
+  "strategic thinking": 0,
+  ...
+  "new factor example": 0
+}
+
+Job Description:
+${job}
+
+Resume:
+${resume}
+`;
+
+  const res = await fetch("/.netlify/functions/openrouter", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ prompt })
+  });
+
+  const data = await res.json();
+
+  try {
+    const parsed = JSON.parse(data.output);
+    document.getElementById("output").textContent =
+      JSON.stringify(parsed, null, 2);
+  } catch (e) {
+    document.getElementById("output").textContent = data.output;
+  }
+}
+</script>
+
 </body>
 </html>
