@@ -20,6 +20,9 @@
 <textarea id="job" placeholder="Paste job description here..."></textarea>
 
 <button onclick="analyze()">Analyze</button>
+<button onclick="enhance()">Enhance Resume</button>
+<h3>Enhanced Resume</h3>
+<pre id="enhanced"></pre>
 
 <pre id="output"></pre>
 
@@ -110,6 +113,45 @@ ${resume}
   }
 }
 </script>
+<script>
+async function enhance() {
+  const resume = document.getElementById("resume").value;
+  const job = document.getElementById("job").value;
 
+  const prompt = `
+You are an expert ATS resume optimizer.
+
+Rewrite and enhance the resume to achieve higher scores across:
+innovation, strategic thinking, measurable results, technical strength, job match, and overall ATS compatibility.
+
+STRICT RULES:
+- Improve clarity, impact, and ATS keywords
+- Add measurable results where possible
+- Align strongly with the job description
+- Keep it professional and concise
+- DO NOT explain anything
+- RETURN ONLY the improved resume text
+
+Job Description:
+${job}
+
+Original Resume:
+${resume}
+`;
+
+  const res = await fetch("/.netlify/functions/openrouter", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ prompt })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("enhanced").textContent =
+    data.output || "No response";
+}
+</script>
 </body>
 </html>
