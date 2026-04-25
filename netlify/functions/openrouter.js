@@ -9,18 +9,23 @@ export async function handler(event) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b:free",
-        messages: [{ role: "user", content: prompt || "Hello!" }]
+        model: "openai/gpt-4o-mini",
+        stream: true,
+        messages: [
+          { role: "user", content: prompt.slice(0, 6000) }
+        ]
       })
     });
 
-    const data = await response.json();
-
+    // Stream headers
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        output: data.choices?.[0]?.message?.content
-      })
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      },
+      body: response.body
     };
 
   } catch (err) {
