@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ATS Resume Analyzer</title>
+  <title>NovaCheck</title>
   <style>
     body { font-family: Arial; padding: 20px; }
     textarea { width: 100%; height: 140px; margin-bottom: 10px; }
@@ -11,21 +11,22 @@
     .pass { color: green; }
     .fail { color: red; }
     #enhanced { white-space: pre-wrap; background:#f4f4f4; padding:10px; }
+    #output { margin-top: 20px; }
   </style>
 </head>
 <body>
 
-<h2>Resume Analyzer</h2>
+<h2>📝 NovaCheck</h2>
 
-<textarea id="resume" placeholder="Paste resume..."></textarea>
-<textarea id="job" placeholder="Paste job description..."></textarea>
+<textarea id="resume" placeholder="Paste your resume text here (plaintext only)..."></textarea>
+<textarea id="job" placeholder="Paste the job description text here..."></textarea>
 
-<button onclick="analyze()">Analyze</button>
-<button onclick="enhance()">Enhance Resume</button>
+<button onclick="analyze()">Analyze ATS Suitability</button>
+<button onclick="enhance()">Enhance Resume for ATS</button>
 
 <div id="output"></div>
 
-<h3>Enhanced Resume</h3>
+<h3>Enhanced Resume (ATS‑Optimized)</h3>
 <div id="enhanced"></div>
 
 <script>
@@ -38,7 +39,6 @@ async function streamRequest(prompt, onChunk, onDone) {
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-
   let buffer = "";
 
   while (true) {
@@ -46,19 +46,16 @@ async function streamRequest(prompt, onChunk, onDone) {
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
-
     const lines = buffer.split("\n");
     buffer = lines.pop();
 
     for (const line of lines) {
       if (line.startsWith("data: ")) {
         const data = line.replace("data: ", "").trim();
-
         if (data === "[DONE]") {
           onDone();
           return;
         }
-
         try {
           const json = JSON.parse(data);
           const content = json.choices?.[0]?.delta?.content;
@@ -75,22 +72,53 @@ function analyze() {
   const job = document.getElementById("job").value.slice(0, 2000);
 
   const prompt = `
-Return ONLY JSON with scores (0-100).
+You are an expert ATS resume auditor. Analyze the resume against the job description and return a JSON object with scores (0–100) for each factor.
 
-Factors:
-innovation, strategic thinking, high quality, competitive, proactively, judgment, job level match, measurable results, paragraph length, resume tone, web presence, font check layout, page setup, contact information, summary, section headings, job title match, date formatting, education match, engagement, technical, content, design, multi-platform, product development, product lifecycle management, product planning
+Follow these strict rules:
 
-You may add new factors.
+1. DO NOT return any text, explanations, or markdown. ONLY return valid JSON.
+2. The JSON object must have keys for each factor; each value is a number between 0 and 100 (no extra fields).
+3. You MAY add new factors if you see important missed dimensions, but keep the core list below.
 
-Job:
+Core factors:
+- job_title_match
+- keyword_match_density
+- measurable_results
+- action_verb_usage
+- section_heading_standardization
+- contact_information_completeness
+- summary_relevance
+- education_relevance
+- date_format_consistency
+- skills_relevance
+- formatting_readability
+- page_length_control
+- ATS_friendly_format
+- achievement_quantification
+- redundancy_removal
+- profession‑specific_keywords
+- industry‑specific_keywords
+
+Additional context:
+
+Job description:
+\`\`\`
 ${job}
+\`\`\`
 
-Resume:
+Resume text:
+\`\`\`
 ${resume}
+\`\`\`
+
+Instructions:
+- Score based on how well the resume matches the job and ATS‑parsing best practices.
+- 0–100 per factor: 0 = completely missing or very weak, 100 = excellent and highly tailored.
+- Be strict: companies use this to shortlist.
+- Only return JSON, nothing else.
 `;
 
   let full = "";
-
   document.getElementById("output").innerHTML = "Analyzing...";
 
   streamRequest(prompt,
@@ -98,7 +126,6 @@ ${resume}
     () => {
       try {
         const scores = JSON.parse(full);
-
         let rows = "";
         let total = 0, count = 0;
 
@@ -110,7 +137,7 @@ ${resume}
           rows += `
             <tr class="${pass ? 'pass':'fail'}">
               <td>${pass ? "✔️" : "❌"}</td>
-              <td>${k}</td>
+              <td>${k.replace(/_/g, " ")}</td>
               <td>${v}%</td>
             </tr>`;
         }
@@ -118,18 +145,19 @@ ${resume}
         const overall = Math.round(total / count);
 
         document.getElementById("output").innerHTML = `
-          <div style="display:flex; gap:30px;">
+          <div style="display:flex; gap:30px; align-items: flex-start;">
             <table>
               <tr><th>Status</th><th>Factor</th><th>Score</th></tr>
               ${rows}
             </table>
-            <div style="font-size:28px;font-weight:bold;">
+            <div style="font-size:28px; font-weight:bold; text-align:center;">
               Overall<br>${overall}%
             </div>
           </div>
         `;
-      } catch {
-        document.getElementById("output").innerText = full;
+      } catch (e) {
+        document.getElementById("output").innerText =
+          "Parse error. Raw response:\n\n" + full;
       }
     }
   );
@@ -141,19 +169,66 @@ function enhance() {
   const job = document.getElementById("job").value.slice(0, 2000);
 
   const prompt = `
-Rewrite and improve the resume for maximum ATS score.
+You are an expert ATS resume optimizer. Transform the given resume to maximize its ATS score while keeping it professional and concise.
 
-- Add measurable results
-- Improve clarity
-- Match job keywords strongly
-- Keep professional format
-- RETURN ONLY FINAL RESUME TEXT
+Follow these rules VERY strictly:
 
-Job:
+1. FORMAT & OUTPUT
+- Return ONLY the final resume text, no comments, no markdown, no JSON.
+- Use plain text with simple line breaks and bullet‑style dashes (-).
+- Do NOT use tables, columns, graphics, colors, or any special formatting.
+- Keep the resume to 1 page equivalent (600–800 words). If it overflows, trim safely but preserve key achievements.
+
+2. STRUCTURE
+Keep exactly these sections, in this order:
+- CONTACT
+- SUMMARY
+- EXPERIENCE
+- SKILLS
+- EDUCATION
+
+Under each, structure like:
+- CONTACT: Name, Phone, Email, LinkedIn URL, City + State (single line, pipe‑separated).
+- SUMMARY: 4–6 lines; start with the target job title; use 5–8 exact job‑description keywords; start sentences with strong verbs.
+- EXPERIENCE: reverse chronological; each role:
+  - Title at Company, City, State | MM YYYY – MM YYYY (or Present)
+  - 4–6 bullets, 1 line each, verb‑first, result‑oriented.
+- SKILLS: 20–30 skills, comma‑separated or multi‑line; include exact keywords from the job description.
+- EDUCATION: Degree, Major | University, City, State | YYYY (GPA if 3.5+).
+
+3. CONTENT RULES
+- Start every bullet with a strong action verb (e.g., Led, Built, Optimized, Reduced).
+- Quantify results everywhere: percentages, dollar amounts, time saved, users, etc.
+- Mirror the job description’s language and keywords (at least 25 distinct matches).
+- Avoid personal pronouns (no “I”, “my”, “me”).
+- Do NOT add hobbies, photos, or references.
+- Do NOT use abbreviations unless in the job description; spell terms out first if needed.
+
+4. ATS‑SPECIFIC HARD RULES
+- Use only plain ASCII characters; no special symbols (e.g., no → “‑”, SEO → “Search Engine Optimization” first).
+- No headers, footers, text boxes, or embedded objects.
+- Right‑align dates under job titles (visually, via spacing if needed).
+- Ensure consistent date format: MM YYYY (e.g., Jan 2020, Present).
+- No gaps longer than 3 months without explanation (use “Career Break” if needed).
+- Make sure section headings are all‑caps, left‑aligned, and standardized (CONTACT, SUMMARY, etc.).
+
+5. JOB DESCRIPTION ALIGNMENT
+- Job description:
+\`\`\`
 ${job}
+\`\`\`
 
-Resume:
+Resume to optimize:
+\`\`\`
 ${resume}
+\`\`\`
+
+6. FINAL INSTRUCTIONS
+- Return ONLY the final ATS‑optimized resume text, no extra characters outside the resume.
+- Do NOT output “Here is your optimized resume:” or any other prefix.
+- If any part cannot be improved without violating rules, leave it as‑is but keep all rules enforced.
+
+Now rewrite the resume according to all of the above rules.
 `;
 
   const out = document.getElementById("enhanced");
