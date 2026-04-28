@@ -12,7 +12,7 @@ export async function handler(event) {
         model: "openai/gpt-oss-120b:free",
         stream: true,
         messages: [
-          { role: "user", content: prompt.slice(0, 6000) }
+          { role: "user", content: prompt}
         ]
       })
     });
