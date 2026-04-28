@@ -37,6 +37,19 @@ async function streamRequest(prompt, onChunk, onDone) {
     body: JSON.stringify({ prompt })
   });
 
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(errText || `Request failed (${res.status})`);
+  }
+
+  const contentType = (res.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes("text/event-stream")) {
+    const text = await res.text();
+    if (text) onChunk(text);
+    onDone();
+    return;
+  }
+
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -121,11 +134,12 @@ Instructions:
   let full = "";
   document.getElementById("output").innerHTML = "Analyzing...";
 
-  streamRequest(prompt,
+  streamRequest(
+    prompt,
     chunk => full += chunk,
     () => {
       try {
-        const scores = JSON.parse(full);
+        const scores = JSON.parse(full.trim());
         let rows = "";
         let total = 0, count = 0;
 
@@ -160,7 +174,10 @@ Instructions:
           "Parse error. Raw response:\n\n" + full;
       }
     }
-  );
+  ).catch(err => {
+    document.getElementById("output").innerText =
+      "Request error:\n\n" + (err?.message || String(err));
+  });
 }
 
 /* ================= ENHANCE ================= */
@@ -234,10 +251,13 @@ Now rewrite the resume according to all of the above rules.
   const out = document.getElementById("enhanced");
   out.textContent = "";
 
-  streamRequest(prompt,
+  streamRequest(
+    prompt,
     chunk => out.textContent += chunk,
     () => {}
-  );
+  ).catch(err => {
+    out.textContent = "Request error:\n\n" + (err?.message || String(err));
+  });
 }
 </script>
 
