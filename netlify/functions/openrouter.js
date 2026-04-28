@@ -9,7 +9,7 @@ export async function handler(event) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
+        model: "openai/gpt-oss-120b:free",
         stream: true,
         messages: [
           { role: "user", content: prompt.slice(0, 6000) }
