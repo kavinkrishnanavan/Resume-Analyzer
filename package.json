@@ -12,6 +12,9 @@
     "netlify-cli": "^2.15.0"
   },
   "dependencies": {
-    "ollama": "^0.6.3"
+    "docx": "^9.5.1",
+    "ollama": "^0.6.3",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1"
   }
 }

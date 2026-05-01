@@ -1,837 +1,592 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NovaCheck Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://unpkg.com/docx@8.2.3/build/index.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --gradient-start: #3b82f6;
-      --gradient-end: #8b5cf6;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1000px;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    h1 {
-      font-size: 3rem;
-      font-weight: 800;
-      background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
-      
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 10px;
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 30px;
-      margin-bottom: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
-    }
-
-    .input-group {
-      margin-bottom: 25px;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: var(--text-main);
-    }
-
-    textarea, input[type="text"] {
-      width: 100%;
-      background: #0f172a;
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      border-radius: 8px;
-      padding: 15px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95rem;
-      resize: vertical;
-      transition: border-color 0.3s;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .file-drop-area {
-      border: 2px dashed var(--card-border);
-      border-radius: 8px;
-      padding: 40px 20px;
-      text-align: center;
-      background: rgba(15, 23, 42, 0.5);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 15px;
-    }
-
-    .file-drop-area:hover, .file-drop-area.dragover {
-      border-color: var(--primary);
-      background: rgba(59, 130, 246, 0.05);
-    }
-
-    .file-drop-area p {
-      color: var(--text-muted);
-      margin-top: 10px;
-    }
-
-    .file-drop-area input[type="file"] {
-      display: none;
-    }
-
-    .btn {
-      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      transition: opacity 0.3s, transform 0.1s;
-      display: inline-block;
-      text-align: center;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-    }
-
-    .btn-outline:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    /* Results Section */
-    #resultsSection {
-      display: none;
-    }
-
-    .score-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
-    .score-circle {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      background: conic-gradient(var(--success) var(--score), var(--card-border) 0deg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 15px;
-      position: relative;
-    }
-
-    .score-circle::before {
-      content: '';
-      position: absolute;
-      width: 130px;
-      height: 130px;
-      background-color: var(--card-bg);
-      border-radius: 50%;
-    }
-
-    .score-value {
-      position: relative;
-      font-size: 2.5rem;
-      font-weight: 800;
-    }
-
-    .score-label {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    @media (max-width: 768px) {
-      .grid-2 {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Analyzer + Optimizer</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #121a33;
+        --panel2: #0f1730;
+        --text: #e8ecff;
+        --muted: #a8b2d6;
+        --border: rgba(255, 255, 255, 0.09);
+        --accent: #7c5cff;
+        --good: #32d583;
+        --warn: #fdb022;
+        --bad: #f97066;
       }
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    th {
-      background-color: rgba(255, 255, 255, 0.05);
-      font-weight: 600;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .list-box {
-      background: rgba(15, 23, 42, 0.5);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 20px;
-      height: 100%;
-    }
-
-    .list-box h3 {
-      margin-bottom: 15px;
-      font-size: 1.1rem;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 10px;
-    }
-
-    .list-box ul {
-      list-style-position: inside;
-      padding-left: 5px;
-    }
-
-    .list-box li {
-      margin-bottom: 8px;
-      color: var(--text-muted);
-    }
-
-    .tag-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .tag {
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--primary);
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .tag.needed {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-    }
-
-    .issues-box {
-      border-color: rgba(239, 68, 68, 0.3);
-      background: rgba(239, 68, 68, 0.05);
-    }
-    .issues-box h3 {
-      color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    /* Optimization Section */
-    #optimizeSection {
-      display: none;
-    }
-    
-    .action-row {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    #optimizedOutput {
-      white-space: pre-wrap;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95rem;
-      background: #0f172a;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid var(--card-border);
-      max-height: 500px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-    }
-
-    .loading-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(5px);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-left-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .hidden {
-      display: none !important;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-    <h3 id="loadingText">Analyzing...</h3>
-  </div>
-
-  <header>
-    <h1>NovaCheck Pro</h1>
-    <p class="subtitle">AI-Powered ATS Resume Analysis & Optimization</p>
-  </header>
-
-  <div class="container">
-    
-    <!-- INPUT SECTION -->
-    <div class="card" id="inputSection">
-      <div class="input-group">
-        <label>1. Upload Resume (PDF) or Paste Text</label>
-        
-        <div class="file-drop-area" id="dropArea">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <p>Drag & Drop your PDF here, or click to browse</p>
-          <input type="file" id="fileInput" accept="application/pdf">
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1000px 500px at 20% 0%, rgba(124, 92, 255, 0.22), transparent 60%),
+          radial-gradient(800px 420px at 90% 20%, rgba(50, 213, 131, 0.14), transparent 55%),
+          var(--bg);
+        color: var(--text);
+      }
+      a {
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 32px auto;
+        padding: 0 16px;
+      }
+      header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+      }
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      @media (min-width: 980px) {
+        .grid {
+          grid-template-columns: 1.05fr 0.95fr;
+        }
+      }
+      .card {
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .card .hd {
+        padding: 14px 14px 10px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .card .hd .t {
+        font-weight: 650;
+        font-size: 14px;
+      }
+      .card .bd {
+        padding: 14px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.14);
+        color: var(--text);
+        border-radius: 12px;
+        outline: none;
+        font-size: 13px;
+      }
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        line-height: 1.45;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 580px) {
+        .row {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      button {
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(124, 92, 255, 0.28), rgba(124, 92, 255, 0.18));
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 650;
+        font-size: 13px;
+      }
+      button.secondary {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.12);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .pill b {
+        color: var(--text);
+        font-weight: 750;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .err {
+        color: #ffd1d1;
+        background: rgba(249, 112, 102, 0.12);
+        border: 1px solid rgba(249, 112, 102, 0.25);
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+      .ok {
+        color: #d6ffe8;
+        background: rgba(50, 213, 131, 0.11);
+        border: 1px solid rgba(50, 213, 131, 0.22);
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 10px 8px;
+        vertical-align: top;
+      }
+      th {
+        text-align: left;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 650;
+      }
+      .score {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+      .dot.good {
+        background: var(--good);
+      }
+      .dot.warn {
+        background: var(--warn);
+      }
+      .dot.bad {
+        background: var(--bad);
+      }
+      .lists {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 760px) {
+        .lists {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: var(--text);
+      }
+      li {
+        margin: 6px 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .downloads {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .downloads button {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+          monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Resume Analyzer + Optimizer</h1>
+          <p>
+            Upload a PDF or paste text → analyze (rubrics + scores) → optimize (no fact changes) → download as
+            TXT/DOCX/PDF.
+          </p>
         </div>
-        
-        <textarea id="resumeText" rows="6" placeholder="...or paste your resume plaintext here"></textarea>
+        <div class="pill"><b id="statusLabel">Ready</b><span class="muted" id="statusSub">/api</span></div>
+      </header>
+
+      <div class="grid">
+        <section class="card">
+          <div class="hd"><div class="t">1) Input</div></div>
+          <div class="bd">
+            <div class="row">
+              <div>
+                <label>Target role (optional)</label>
+                <input id="targetRole" type="text" placeholder="e.g., Frontend Engineer, Data Analyst, Product Manager" />
+              </div>
+              <div>
+                <label>PDF resume (optional)</label>
+                <input id="pdfFile" type="file" accept="application/pdf" />
+                <div class="small" style="margin-top: 6px">If you upload a PDF, the app will extract text server-side.</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 12px">
+              <label>Or paste resume text</label>
+              <textarea id="resumeText" placeholder="Paste your resume/CV text here..."></textarea>
+              <div class="small" style="margin-top: 6px">
+                Tip: If both PDF and text are provided, the PDF text is used.
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="analyzeBtn">Analyze</button>
+              <button class="secondary" id="clearBtn">Clear</button>
+            </div>
+
+            <div id="inputMsg" style="margin-top: 12px"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="hd"><div class="t">2) Analysis</div></div>
+          <div class="bd">
+            <div class="pill" style="margin-bottom: 12px">
+              <span class="muted">Overall</span>
+              <b id="overallScore">—</b>
+              <span class="muted">%</span>
+            </div>
+
+            <div id="analysisArea" class="small muted">Run analysis to see rubric scores, skills, keywords, and recommendations.</div>
+
+            <div class="btns" style="margin-top: 12px">
+              <button id="optimizeBtn" disabled>Optimize Resume</button>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <div class="input-group">
-        <label>2. Paste Target Job Description</label>
-        <textarea id="jobText" rows="6" placeholder="Paste the full job description here..."></textarea>
-      </div>
+      <div class="grid" style="margin-top: 14px">
+        <section class="card">
+          <div class="hd"><div class="t">3) Optimized Resume</div></div>
+          <div class="bd">
+            <label>Optimized resume text</label>
+            <textarea id="optimizedText" placeholder="After optimization, the updated resume will appear here..."></textarea>
+            <div class="downloads">
+              <button id="dlTxtBtn" disabled>Download .txt</button>
+              <button id="dlDocxBtn" disabled>Download .docx</button>
+              <button id="dlPdfBtn" disabled>Download .pdf</button>
+            </div>
+            <div id="optMsg" style="margin-top: 12px"></div>
+          </div>
+        </section>
 
-      <button class="btn" id="analyzeBtn">Analyze Resume</button>
+        <section class="card">
+          <div class="hd"><div class="t">Notes</div></div>
+          <div class="bd">
+            <div class="small muted">
+              This tool suggests improvements and can rewrite wording/formatting, but it will not invent new facts.
+              Items marked “User-only issues” are never auto-changed.
+            </div>
+            <div class="small muted" style="margin-top: 10px">
+              Configure server key via environment variable <span class="mono">OLLAMA_API_KEY</span>.
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
 
-    <!-- RESULTS SECTION -->
-    <div class="card hidden" id="resultsSection">
-      <h2 style="margin-bottom: 25px; text-align: center;">Analysis Results</h2>
-      
-      <div class="score-container">
-        <div class="score-circle" id="scoreCircle" style="--score: 0deg;">
-          <span class="score-value" id="overallScore">0</span>
-        </div>
-        <div class="score-label">Overall ATS Match Score</div>
-      </div>
+    <script type="module">
+      const $ = (id) => document.getElementById(id);
 
-      <div class="grid-2">
-        <div>
-          <table id="rubricsTable">
+      const ui = {
+        statusLabel: $("statusLabel"),
+        statusSub: $("statusSub"),
+        targetRole: $("targetRole"),
+        pdfFile: $("pdfFile"),
+        resumeText: $("resumeText"),
+        analyzeBtn: $("analyzeBtn"),
+        clearBtn: $("clearBtn"),
+        inputMsg: $("inputMsg"),
+        overallScore: $("overallScore"),
+        analysisArea: $("analysisArea"),
+        optimizeBtn: $("optimizeBtn"),
+        optimizedText: $("optimizedText"),
+        dlTxtBtn: $("dlTxtBtn"),
+        dlDocxBtn: $("dlDocxBtn"),
+        dlPdfBtn: $("dlPdfBtn"),
+        optMsg: $("optMsg"),
+      };
+
+      const state = {
+        analysis: null,
+        extractedText: null,
+      };
+
+      function setStatus(label, sub = "/api") {
+        ui.statusLabel.textContent = label;
+        ui.statusSub.textContent = sub;
+      }
+
+      function showMsg(el, kind, text) {
+        if (!text) {
+          el.innerHTML = "";
+          return;
+        }
+        el.innerHTML = `<div class="${kind === "err" ? "err" : "ok"}">${escapeHtml(text)}</div>`;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      async function fileToBase64(file) {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let bin = "";
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+      }
+
+      function scoreClass(score) {
+        if (score >= 80) return "good";
+        if (score >= 60) return "warn";
+        return "bad";
+      }
+
+      function renderAnalysis(analysis) {
+        const rubricRows = analysis.rubrics
+          .map((r) => {
+            const cls = scoreClass(r.score_percent);
+            return `
+              <tr>
+                <td>
+                  <div class="score"><span class="dot ${cls}"></span><b>${escapeHtml(r.name)}</b></div>
+                </td>
+                <td>${escapeHtml(String(r.score_percent))}%</td>
+                <td class="muted">${escapeHtml((r.notes || []).join(" · "))}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        const skills = analysis.skills_present?.length ? analysis.skills_present : ["(none detected)"];
+        const missing = analysis.missing_keywords?.length ? analysis.missing_keywords : ["(none)"];
+        const recs = analysis.recommendations_editable?.length ? analysis.recommendations_editable : ["(none)"];
+        const issues = analysis.user_only_issues?.length ? analysis.user_only_issues : ["(none)"];
+
+        ui.overallScore.textContent = String(analysis.overall_score_percent ?? "—");
+
+        ui.analysisArea.innerHTML = `
+          <table>
             <thead>
               <tr>
-                <th>Factor</th>
-                <th style="width: 80px; text-align: right;">Score</th>
+                <th>Rubric</th>
+                <th>Score</th>
+                <th>Notes</th>
               </tr>
             </thead>
-            <tbody>
-              <!-- Dynamic rows -->
-            </tbody>
+            <tbody>${rubricRows}</tbody>
           </table>
-        </div>
-        
-        <div class="list-box issues-box">
-          <h3>⚠️ User Issues (Requires Your Action)</h3>
-          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 10px;">The AI cannot safely change these without hallucinating facts. Please review them.</p>
-          <ul id="issuesList">
-            <!-- Dynamic items -->
-          </ul>
-        </div>
-      </div>
 
-      <div class="grid-2">
-        <div class="list-box">
-          <h3>✅ Listed Skills</h3>
-          <div class="tag-container" id="skillsListed">
-            <!-- Dynamic items -->
+          <div class="lists" style="margin-top: 12px">
+            <div class="card" style="background: rgba(0,0,0,0.08)">
+              <div class="hd"><div class="t">Skills Present</div></div>
+              <div class="bd"><ul>${skills.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul></div>
+            </div>
+            <div class="card" style="background: rgba(0,0,0,0.08)">
+              <div class="hd"><div class="t">Missing Keywords</div></div>
+              <div class="bd"><ul>${missing.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul></div>
+            </div>
           </div>
-        </div>
 
-        <div class="list-box">
-          <h3>🔍 Missing Keywords</h3>
-          <div class="tag-container" id="keywordsNeeded">
-            <!-- Dynamic items -->
+          <div class="lists" style="margin-top: 10px">
+            <div class="card" style="background: rgba(0,0,0,0.08)">
+              <div class="hd"><div class="t">Recommendations (Auto-optimizable)</div></div>
+              <div class="bd"><ul>${recs.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul></div>
+            </div>
+            <div class="card" style="background: rgba(0,0,0,0.08)">
+              <div class="hd"><div class="t">User-only Issues (Never Auto-changed)</div></div>
+              <div class="bd"><ul>${issues.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul></div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="list-box" style="margin-bottom: 30px;">
-        <h3>💡 AI Recommendations for Optimization</h3>
-        <ul id="recommendationsList">
-          <!-- Dynamic items -->
-        </ul>
-      </div>
-
-      <div style="background: rgba(59, 130, 246, 0.1); border-radius: 8px; padding: 20px; border: 1px solid rgba(59, 130, 246, 0.3);">
-        <h3 style="color: var(--text-main); margin-bottom: 10px;">Ready to optimize?</h3>
-        <p style="color: var(--text-muted); margin-bottom: 15px;">NovaCheck will safely apply the recommendations above to enhance your resume's phrasing and structure, matching the missing keywords, <b>without altering your true experience or addressing the manual issues</b>.</p>
-        <button class="btn" id="optimizeBtn">Generate ATS-Optimized Resume</button>
-      </div>
-    </div>
-
-    <!-- OPTIMIZATION SECTION -->
-    <div class="card hidden" id="optimizeSection">
-      <h2 style="margin-bottom: 20px;">Your ATS-Optimized Resume</h2>
-      <div id="optimizedOutput"></div>
-      
-      <div style="margin-top: 15px;">
-        <label>Export As:</label>
-        <div class="action-row">
-          <button class="btn btn-outline" id="exportTxtBtn">Download .TXT</button>
-          <button class="btn btn-outline" id="exportDocxBtn">Download .DOCX</button>
-          <button class="btn btn-outline" id="exportPdfBtn">Download .PDF</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // --- PDF.js Setup ---
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    // --- State ---
-    let analysisData = null;
-    let optimizedTextContent = "";
-
-    // --- UI Elements ---
-    const dropArea = document.getElementById('dropArea');
-    const fileInput = document.getElementById('fileInput');
-    const resumeText = document.getElementById('resumeText');
-    const jobText = document.getElementById('jobText');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const optimizeBtn = document.getElementById('optimizeBtn');
-    
-    const resultsSection = document.getElementById('resultsSection');
-    const optimizeSection = document.getElementById('optimizeSection');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-
-    // --- File Drag & Drop ---
-    dropArea.addEventListener('click', () => fileInput.click());
-    dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('dragover'); });
-    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
-    dropArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropArea.classList.remove('dragover');
-      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length) handleFile(e.target.files[0]);
-    });
-
-    async function handleFile(file) {
-      if (file.type !== 'application/pdf') {
-        alert('Please upload a valid PDF file.');
-        return;
+        `;
       }
-      
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = "";
-        
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          fullText += pageText + "\n\n";
+
+      async function apiJson(path, payload) {
+        const res = await fetch(path, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg = data?.error || `Request failed (${res.status})`;
+          throw new Error(msg);
         }
-        
-        resumeText.value = fullText;
-        dropArea.querySelector('p').innerText = `Loaded: ${file.name}`;
-      } catch (err) {
-        alert('Error parsing PDF: ' + err.message);
-      }
-    }
-
-    // --- Backend Comm ---
-    async function callOpenRouter(prompt) {
-      const res = await fetch("/.netlify/functions/openrouter", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ prompt })
-      });
-
-      if (!res.ok) {
-        throw new Error(`Request failed (${res.status})`);
-      }
-      
-      const text = await res.text();
-      return text;
-    }
-
-    // --- Analysis ---
-    analyzeBtn.addEventListener('click', async () => {
-      const rText = resumeText.value.trim();
-      const jText = jobText.value.trim();
-
-      if (!rText || !jText) {
-        alert('Please provide both the resume text/file and the job description.');
-        return;
+        return data;
       }
 
-      showLoading("Analyzing resume structure and ATS match...");
-      resultsSection.classList.add('hidden');
-      optimizeSection.classList.add('hidden');
+      async function download(format) {
+        const text = ui.optimizedText.value.trim();
+        if (!text) throw new Error("Nothing to download. Optimize first (or paste optimized text).");
 
-      const prompt = `
-You are an expert ATS resume auditor. Analyze the provided resume against the job description.
-Return ONLY a valid JSON object matching this exact structure:
+        setStatus("Exporting…", `/api/export (${format})`);
+        const data = await apiJson("/api/export", { format, text });
 
-{
-  "skills_listed": ["skill1", "skill2"],
-  "keywords_needed": ["keyword1", "keyword2"],
-  "recommendations": ["Rewrite summary to include X", "Quantify bullet point Y"],
-  "issues": ["Missing phone number", "Unexplained 2-year gap"],
-  "overall_score": 75,
-  "rubrics": {
-    "Job Title Match": 80,
-    "Keyword Match Density": 60,
-    "Measurable Results": 50,
-    "Action Verb Usage": 90,
-    "Formatting Readability": 70
-  }
-}
-
-Rules:
-- "issues" are things ONLY the user can fix (e.g. missing contact info, missing dates).
-- "recommendations" are things an AI could safely rewrite (e.g. better phrasing, adding missing keywords to context).
-- "overall_score" is a number 0-100.
-- "rubrics" keys can vary, but provide at least 5 meaningful categories with scores 0-100.
-- Return raw JSON only, no markdown blocks.
-
-Job Description:
-"""
-${jText}
-"""
-
-Resume:
-"""
-${rText}
-"""
-`;
-
-      try {
-        let rawResponse = await callOpenRouter(prompt);
-        // Clean up potential markdown formatting around JSON
-        rawResponse = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-        
-        analysisData = JSON.parse(rawResponse);
-        renderAnalysis(analysisData);
-        resultsSection.classList.remove('hidden');
-      } catch (err) {
-        alert("Failed to parse analysis. Ensure the model returned valid JSON.\nError: " + err.message);
-      } finally {
-        hideLoading();
-      }
-    });
-
-    function renderAnalysis(data) {
-      // Score Circle
-      const score = Math.min(100, Math.max(0, data.overall_score || 0));
-      document.getElementById('overallScore').innerText = score;
-      document.getElementById('scoreCircle').style.setProperty('--score', `${(score / 100) * 360}deg`);
-
-      // Rubrics Table
-      const rTbody = document.querySelector('#rubricsTable tbody');
-      rTbody.innerHTML = '';
-      if (data.rubrics) {
-        for (const [key, value] of Object.entries(data.rubrics)) {
-          const color = value >= 70 ? 'var(--success)' : (value >= 40 ? 'var(--warning)' : 'var(--danger)');
-          rTbody.innerHTML += `
-            <tr>
-              <td>${key}</td>
-              <td style="text-align:right; font-weight:bold; color:${color};">${value}%</td>
-            </tr>
-          `;
-        }
-      }
-
-      // Arrays
-      const fillTags = (id, arr, isNeeded = false) => {
-        const el = document.getElementById(id);
-        el.innerHTML = '';
-        if (arr && arr.length) {
-          arr.forEach(item => {
-            el.innerHTML += `<span class="tag ${isNeeded ? 'needed' : ''}">${item}</span>`;
-          });
-        } else {
-          el.innerHTML = `<span style="color:var(--text-muted);font-size:0.9rem;">None identified.</span>`;
-        }
-      };
-
-      const fillList = (id, arr) => {
-        const el = document.getElementById(id);
-        el.innerHTML = '';
-        if (arr && arr.length) {
-          arr.forEach(item => {
-            el.innerHTML += `<li>${item}</li>`;
-          });
-        } else {
-          el.innerHTML = `<li style="list-style:none; color:var(--text-muted);">None identified.</li>`;
-        }
-      };
-
-      fillTags('skillsListed', data.skills_listed);
-      fillTags('keywordsNeeded', data.keywords_needed, true);
-      fillList('recommendationsList', data.recommendations);
-      fillList('issuesList', data.issues);
-    }
-
-    // --- Optimization ---
-    optimizeBtn.addEventListener('click', async () => {
-      const rText = resumeText.value.trim();
-      const jText = jobText.value.trim();
-
-      if (!analysisData) return;
-
-      showLoading("Optimizing your resume based on AI recommendations...");
-
-      const prompt = `
-You are an expert ATS resume optimizer. Transform the given resume to maximize its ATS score.
-
-CRITICAL INSTRUCTIONS:
-1. Apply the following recommended changes to improve phrasing and keyword matches:
-${analysisData.recommendations.map(r => "- " + r).join("\n")}
-
-2. DO NOT attempt to fix these "Issues" (the user must do this manually), leave them as is:
-${analysisData.issues.map(i => "- " + i).join("\n")}
-
-3. DO NOT hallucinate facts, make up jobs, or change the fundamental meaning of the user's experience. Keep truthful.
-4. Output MUST be formatted cleanly in plain text using standard conventions (caps for headers, bullets). Do not output markdown blocks or comments. Just the resume text.
-5. Use consistent formatting (e.g. SUMMARY, EXPERIENCE, SKILLS, EDUCATION).
-
-Job description:
-"""
-${jText}
-"""
-
-Original Resume:
-"""
-${rText}
-"""
-`;
-
-      try {
-        const optimizedText = await callOpenRouter(prompt);
-        optimizedTextContent = optimizedText.trim();
-        document.getElementById('optimizedOutput').innerText = optimizedTextContent;
-        optimizeSection.classList.remove('hidden');
-        
-        // Scroll to optimization section
-        optimizeSection.scrollIntoView({ behavior: 'smooth' });
-      } catch (err) {
-        alert("Optimization failed:\n" + err.message);
-      } finally {
-        hideLoading();
-      }
-    });
-
-    // --- Export Functions ---
-    document.getElementById('exportTxtBtn').addEventListener('click', () => {
-      if (!optimizedTextContent) return;
-      const blob = new Blob([optimizedTextContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Optimized_Resume.txt';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('exportDocxBtn').addEventListener('click', async () => {
-      if (!optimizedTextContent || !window.docx) return;
-      
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx;
-      
-      // Basic text parsing into paragraphs
-      const lines = optimizedTextContent.split('\n');
-      const paragraphs = lines.map(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return new Paragraph({ text: "", spacing: { after: 120 } });
-        
-        // Very basic heading detection (all caps and short)
-        if (trimmed === trimmed.toUpperCase() && trimmed.length < 30) {
-          return new Paragraph({
-            text: trimmed,
-            heading: HeadingLevel.HEADING_1,
-            spacing: { before: 240, after: 120 }
-          });
-        }
-        
-        // Bullet detection
-        if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-          return new Paragraph({
-            text: trimmed.substring(1).trim(),
-            bullet: { level: 0 }
-          });
-        }
-        
-        return new Paragraph({ text: trimmed, spacing: { after: 120 } });
-      });
-
-      const doc = new Document({
-        sections: [{ properties: {}, children: paragraphs }]
-      });
-
-      Packer.toBlob(doc).then(blob => {
+        const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
+        const blob = new Blob([bytes], { type: data.content_type });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'Optimized_Resume.docx';
+        a.download = data.filename || `optimized_resume.${format}`;
+        document.body.appendChild(a);
         a.click();
+        a.remove();
         URL.revokeObjectURL(url);
-      });
-    });
+        setStatus("Ready");
+      }
 
-    document.getElementById('exportPdfBtn').addEventListener('click', () => {
-      if (!optimizedTextContent || !window.html2pdf) return;
-      
-      // Create a temporary hidden div for PDF rendering
-      const printDiv = document.createElement('div');
-      printDiv.style.fontFamily = 'Arial, sans-serif';
-      printDiv.style.fontSize = '12pt';
-      printDiv.style.lineHeight = '1.5';
-      printDiv.style.padding = '40px';
-      printDiv.style.color = '#000';
-      printDiv.style.background = '#fff';
-      
-      // Basic parsing to HTML
-      let html = '';
-      const lines = optimizedTextContent.split('\n');
-      
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) {
-          html += '<br>';
-        } else if (trimmed === trimmed.toUpperCase() && trimmed.length < 30) {
-          html += `<h2 style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px;">${trimmed}</h2>`;
-        } else if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-          html += `<li style="margin-left: 20px;">${trimmed.substring(1).trim()}</li>`;
-        } else {
-          html += `<p style="margin: 0 0 5px 0;">${trimmed}</p>`;
+      ui.clearBtn.addEventListener("click", () => {
+        ui.pdfFile.value = "";
+        ui.resumeText.value = "";
+        ui.targetRole.value = "";
+        ui.overallScore.textContent = "—";
+        ui.analysisArea.textContent = "Run analysis to see rubric scores, skills, keywords, and recommendations.";
+        ui.optimizeBtn.disabled = true;
+        ui.optimizedText.value = "";
+        ui.dlTxtBtn.disabled = true;
+        ui.dlDocxBtn.disabled = true;
+        ui.dlPdfBtn.disabled = true;
+        showMsg(ui.inputMsg, null, "");
+        showMsg(ui.optMsg, null, "");
+        state.analysis = null;
+        state.extractedText = null;
+        setStatus("Ready");
+      });
+
+      ui.analyzeBtn.addEventListener("click", async () => {
+        showMsg(ui.inputMsg, null, "");
+        showMsg(ui.optMsg, null, "");
+        ui.optimizeBtn.disabled = true;
+        ui.dlTxtBtn.disabled = true;
+        ui.dlDocxBtn.disabled = true;
+        ui.dlPdfBtn.disabled = true;
+
+        try {
+          const pdf = ui.pdfFile.files?.[0] || null;
+          const pasted = ui.resumeText.value.trim();
+          const targetRole = ui.targetRole.value.trim();
+
+          if (!pdf && !pasted) throw new Error("Upload a PDF or paste resume text.");
+          if (pdf && pdf.size > 10 * 1024 * 1024) throw new Error("PDF is too large. Please use ≤ 10MB.");
+
+          let pdfBase64 = null;
+          if (pdf) {
+            setStatus("Reading PDF…");
+            pdfBase64 = await fileToBase64(pdf);
+          }
+
+          setStatus("Analyzing…", "/api/analyze");
+          const data = await apiJson("/api/analyze", { pdf_base64: pdfBase64, text: pasted || null, target_role: targetRole || null });
+
+          state.analysis = data.analysis;
+          state.extractedText = data.extracted_text;
+          renderAnalysis(data.analysis);
+          ui.optimizeBtn.disabled = false;
+          showMsg(ui.inputMsg, "ok", `Analyzed ${data.source === "pdf" ? "PDF" : "pasted text"} (${data.extracted_text.length} chars).`);
+          setStatus("Ready");
+        } catch (e) {
+          showMsg(ui.inputMsg, "err", e.message || String(e));
+          setStatus("Ready");
         }
       });
-      
-      printDiv.innerHTML = html;
-      
-      const opt = {
-        margin:       0.5,
-        filename:     'Optimized_Resume.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      
-      html2pdf().set(opt).from(printDiv).save();
-    });
 
-    // --- Helpers ---
-    function showLoading(text) {
-      loadingText.innerText = text;
-      loadingOverlay.style.display = 'flex';
-    }
-    
-    function hideLoading() {
-      loadingOverlay.style.display = 'none';
-    }
-  </script>
-</body>
+      ui.optimizeBtn.addEventListener("click", async () => {
+        showMsg(ui.optMsg, null, "");
+        try {
+          if (!state.analysis || !state.extractedText) throw new Error("Run analysis first.");
+          const targetRole = ui.targetRole.value.trim();
+
+          setStatus("Optimizing…", "/api/optimize");
+          const data = await apiJson("/api/optimize", {
+            text: state.extractedText,
+            analysis: state.analysis,
+            target_role: targetRole || null,
+          });
+
+          ui.optimizedText.value = data.optimized_text || "";
+          ui.dlTxtBtn.disabled = !ui.optimizedText.value.trim();
+          ui.dlDocxBtn.disabled = !ui.optimizedText.value.trim();
+          ui.dlPdfBtn.disabled = !ui.optimizedText.value.trim();
+          showMsg(ui.optMsg, "ok", `Optimized. Applied: ${data.applied_recommendations_count} recommendation(s).`);
+          setStatus("Ready");
+        } catch (e) {
+          showMsg(ui.optMsg, "err", e.message || String(e));
+          setStatus("Ready");
+        }
+      });
+
+      ui.dlTxtBtn.addEventListener("click", () => download("txt").catch((e) => showMsg(ui.optMsg, "err", e.message || String(e))));
+      ui.dlDocxBtn.addEventListener("click", () => download("docx").catch((e) => showMsg(ui.optMsg, "err", e.message || String(e))));
+      ui.dlPdfBtn.addEventListener("click", () => download("pdf").catch((e) => showMsg(ui.optMsg, "err", e.message || String(e))));
+    </script>
+  </body>
 </html>
