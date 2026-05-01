@@ -12,49 +12,87 @@ import {
 
 function buildAnalysisPrompt({ resumeText, targetRole }) {
   const rubrics = [
-    // --- ATS & Parsing ---
-    "ATS Parsability & Formatting (Hidden tables, graphics, complex columns)",
-    "Standardized Section Headers (Experience, Education, Skills)",
-    "Keyword Optimization & Density (Target Role alignment)",
+    // --- 1. ATS & PARSABILITY (8 Points) ---
+    "ATS: Table/Column Usage (Detection of complex layouts)",
+    "ATS: Standard Section Heading Naming",
+    "ATS: Contact Info Placement (Header vs Body)",
+    "ATS: Font Accessibility (Standard vs Non-standard)",
+    "ATS: Removal of Graphics/Icons/Images",
+    "ATS: Bullet Point Symbol Compatibility",
+    "ATS: Keyword Frequency (Target Role Alignment)",
+    "ATS: File Structure Logic (Chronological vs Functional)",
 
-    // --- Content & Impact ---
-    "Quantifiable Impact ($, %, time saved, specific metrics)",
-    "Action-Result Linkage (Use of STAR/XYZ formats)",
-    "Action Verbs & Active Voice (Strong, varied verbs)",
-    "Skill Evidence Integration (Skills demonstrated in bullets, not just listed)",
-    "Relevance to Target Role (Prioritization of relevant experience)",
+    // --- 2. IMPACT & QUANTIFICATION (10 Points) ---
+    "Impact: Hard Revenue/Profit Figures",
+    "Impact: Percentage-based Improvements",
+    "Impact: Time-saving/Efficiency Metrics",
+    "Impact: Scale of Responsibility (Budget/Team Size)",
+    "Impact: Frequency of Tasks (Daily/Monthly volumes)",
+    "Impact: STAR Method Execution (Situation/Task/Action/Result)",
+    "Impact: XYZ Formula Utilization",
+    "Impact: Market/Industry Context for Achievements",
+    "Impact: Evidence of Scope (Local vs Global)",
+    "Impact: Awards, Recognition, or Promotions",
 
-    // --- Tone & Professionalism ---
-    "Elimination of Fluff & Clichés ('Team player', 'Synergy', etc.)",
-    "Pronoun Usage (Zero 1st/3rd person pronouns: I, me, he, she)",
-    "Clarity, Brevity & Readability (Avoiding run-on sentences or dense blocks)",
+    // --- 3. WRITING & TONE (10 Points) ---
+    "Tone: Action Verb Variety (No repetitive 'Managed')",
+    "Tone: Elimination of First Person (I, me, my)",
+    "Tone: Elimination of Third Person (He, she, [Name])",
+    "Tone: Removal of Subjective Adjectives (e.g., 'Passionate')",
+    "Tone: Removal of Corporate Cliches/Fluff",
+    "Tone: Active vs Passive Voice Ratio",
+    "Tone: Professional Industry-Specific Vocabulary",
+    "Tone: Sentence Length Diversity",
+    "Tone: Concise Delivery (No 'Responsible for...')",
+    "Tone: Parallelism in Lists",
 
-    // --- Mechanics & Consistency ---
-    "Chronological Consistency (Dates, missing gaps)",
-    "Tense Consistency (Past tense for past roles, present for current)",
-    "Grammar, Spelling & Typographical Accuracy",
+    // --- 4. TECHNICAL & SKILLS (8 Points) ---
+    "Skills: Hard Skill Extraction Accuracy",
+    "Skills: Tool Proficiency Levels (Beginner vs Expert)",
+    "Skills: Skill Integration within Experience Bullets",
+    "Skills: Separation of Tools vs Frameworks vs Methods",
+    "Skills: Recency of Technical Skills",
+    "Skills: Certification/License Verifiability",
+    "Skills: Relevance of Skills to Target Role",
+    "Skills: Soft Skill Evidence (Demonstrated, not listed)",
 
-    // --- Strategy & Red Flags ---
-    "Career Trajectory & Progression (Evidence of growth or promotions)",
-    "Credibility & Verifiability of Claims (Are the metrics realistic?)",
-    "Red Flags (Unexplained gaps, suspicious overlap, vague titles)"
+    // --- 5. FORMAT & CONSISTENCY (7 Points) ---
+    "Format: Date Format Uniformity (e.g., MM/YYYY)",
+    "Format: Location Formatting Consistency",
+    "Format: Punctuation Consistency (End-of-bullet periods)",
+    "Format: Tense Consistency (Present for current, Past for old)",
+    "Format: Bold/Italic Usage Logic",
+    "Format: Proper Noun Capitalization",
+    "Format: White Space Distribution",
+
+    // --- 6. STRATEGY & RED FLAGS (7 Points) ---
+    "Strategy: Employment Gap Identification",
+    "Strategy: Career Progression/Upward Mobility",
+    "Strategy: Over-qualification/Under-qualification Risk",
+    "Strategy: Resume Length Appropriateness",
+    "Strategy: Education Level Relevance",
+    "Strategy: Professional Summary/Objective Sharpness",
+    "Strategy: Contact Information Professionalism"
   ];
 
   return `
-You are an uncompromising, highly analytical ATS (Applicant Tracking System) parser and expert technical recruiter.
-Your sole purpose is to evaluate the provided resume against the target role and output a STRICTLY formatted JSON object.
+You are a ruthless, world-class executive recruiter and a highly sophisticated ATS algorithm. 
+Your goal is to tear apart the provided resume with extreme prejudice. Do not be "nice." Do not "encourage." Be objective, technical, and hyper-critical.
 
-CRITICAL DIRECTIVES - FAILURE TO OBEY WILL RESULT IN SYSTEM ERROR:
-1. OUTPUT FORMAT: You MUST return a single JSON object and nothing else. Absolutely NO markdown formatting (do not use \`\`\`json or code fences), NO introductory text, and NO concluding remarks. 
-2. ZERO HALLUCINATION: Only use evidence from the resume text. You are forbidden from inventing, assuming, or deducing any skills, experiences, dates, employers, or metrics not explicitly written in the resume text.
-3. HARSH BUT FAIR SCORING: Do not inflate scores. An average resume should score around 50-60. Only top-tier, perfectly optimized resumes should score 90+.
-4. FIELD DEFINITIONS:
-   - "missing_keywords": Must be highly specific hard skills, technical tools, or standard ATS terms directly relevant to the target role. No generic buzzword spam.
-   - "recommendations_editable": Actionable rewrites and formatting changes that can be made without requiring new facts.
-   - "user_only_issues": Information gaps ONLY the user can fix (missing dates, unverifiable claims, unclear company names, etc.). These MUST NOT be auto-fixed later.
-   - "rubrics": Provide scores per rubric (0-100 integers) and a short "notes" array per rubric.
+STRICT OPERATING CONSTRAINTS:
+1. OUTPUT: Return a SINGLE JSON object. NO markdown, NO code fences (\`\`\`), NO preamble.
+2. EVIDENCE ONLY: Do not invent facts. If a metric isn't there, score that rubric 0. 
+3. SCORING SCALE: 
+   - 0-30: Fatal flaws / Missing entirely.
+   - 31-60: Present but weak/generic.
+   - 61-85: Strong and quantified.
+   - 86-100: World-class; impossible to improve.
+4. FIELD LOGIC:
+   - "missing_keywords": Hard technical skills and industry terms only.
+   - "recommendations_editable": Rewrites that do NOT require new info from the user.
+   - "user_only_issues": Questions about missing data, gaps, or unverifiable claims.
 
-EXPECTED JSON SCHEMA:
+JSON SCHEMA:
 {
   "overall_score_percent": number,
   "rubrics": [
@@ -66,16 +104,14 @@ EXPECTED JSON SCHEMA:
   "user_only_issues": string[]
 }
 
-TARGET ROLE (Evaluate strictly against this, if provided):
-${targetRole ? JSON.stringify(targetRole) : "\"General Professional (No specific role provided)\""}
+TARGET ROLE:
+${targetRole ? JSON.stringify(targetRole) : "\"Not specified - evaluate against general professional standards\""}
 
-RUBRICS TO SCORE (You must evaluate exactly these ${rubrics.length} rubrics using these exact names):
+RUBRICS TO EVALUATE (You must evaluate all 50 items):
 ${rubrics.map((r) => `- ${r}`).join("\n")}
 
-RESUME TEXT TO ANALYZE:
---- START RESUME ---
+RESUME TEXT:
 ${resumeText}
---- END RESUME ---
 `.trim();
 }
 
