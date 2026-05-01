@@ -64,6 +64,17 @@ async function extractTextFromPdfBase64(pdfBase64) {
   return text;
 }
 
+function maybeTruncate(text, limitChars = 14000) {
+  const s = String(text || "").trim();
+  if (s.length <= limitChars) return { text: s, truncated: false };
+  const head = s.slice(0, Math.floor(limitChars * 0.75));
+  const tail = s.slice(-Math.floor(limitChars * 0.25));
+  return {
+    text: `${head}\n\n[...TRUNCATED FOR SPEED...]\n\n${tail}`.trim(),
+    truncated: true,
+  };
+}
+
 function normalizeAnalysis(raw) {
   const rubrics = Array.isArray(raw?.rubrics) ? raw.rubrics : [];
   const normalizedRubrics = rubrics
@@ -96,7 +107,7 @@ export async function handler(event) {
     const pdfBase64 = body?.pdf_base64 || null;
     const text = body?.text || null;
     const targetRole = body?.target_role || null;
-    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:120b-cloud";
+    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:20b-cloud";
 
     if (!pdfBase64 && !text) return errorResponse(400, "Provide `pdf_base64` or `text`.");
     // Netlify/AWS request payload limits are small; base64 adds overhead.
@@ -104,7 +115,8 @@ export async function handler(event) {
       return errorResponse(413, "PDF payload too large. Use a smaller PDF (≤ 4MB) or paste text.");
     }
 
-    const extractedText = pdfBase64 ? await extractTextFromPdfBase64(pdfBase64) : String(text).trim();
+    const extractedTextRaw = pdfBase64 ? await extractTextFromPdfBase64(pdfBase64) : String(text).trim();
+    const { text: extractedText, truncated } = maybeTruncate(extractedTextRaw, 14000);
     if (!extractedText) return errorResponse(400, "Empty resume text.");
 
     const prompt = buildAnalysisPrompt({ resumeText: extractedText, targetRole });
@@ -122,6 +134,7 @@ export async function handler(event) {
     return jsonResponse(200, {
       source: pdfBase64 ? "pdf" : "text",
       extracted_text: extractedText,
+      truncated,
       analysis,
     });
   } catch (err) {

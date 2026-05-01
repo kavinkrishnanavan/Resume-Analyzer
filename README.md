@@ -16,6 +16,7 @@ Static frontend in `public/` with Netlify Functions in `netlify/functions/`.
 2) Set env var:
 - `OLLAMA_API_KEY=...`
 - Optional: `OLLAMA_MODEL=gpt-oss:120b-cloud`
+- Optional: `OLLAMA_HOST=https://ollama.com`
 
 3) Run locally:
 - `npx netlify dev`

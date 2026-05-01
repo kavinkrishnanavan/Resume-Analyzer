@@ -283,6 +283,15 @@
               </div>
             </div>
 
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Model (optional)</label>
+                <input id="modelName" type="text" placeholder="e.g., gpt-oss:20b-cloud" value="gpt-oss:20b-cloud" />
+                <div class="small" style="margin-top: 6px">Use a smaller/faster model if you see timeouts.</div>
+              </div>
+              <div></div>
+            </div>
+
             <div style="margin-top: 12px">
               <label>Or paste resume text</label>
               <textarea id="resumeText" placeholder="Paste your resume/CV text here..."></textarea>
@@ -355,6 +364,7 @@
         statusLabel: $("statusLabel"),
         statusSub: $("statusSub"),
         targetRole: $("targetRole"),
+        modelName: $("modelName"),
         pdfFile: $("pdfFile"),
         resumeText: $("resumeText"),
         analyzeBtn: $("analyzeBtn"),
@@ -543,6 +553,7 @@
           const pdf = ui.pdfFile.files?.[0] || null;
           const pasted = ui.resumeText.value.trim();
           const targetRole = ui.targetRole.value.trim();
+          const model = ui.modelName.value.trim();
 
           if (!pdf && !pasted) throw new Error("Upload a PDF or paste resume text.");
           // Netlify Functions have a ~6MB request limit; base64 adds ~33% overhead.
@@ -555,7 +566,12 @@
           }
 
           setStatus("Analyzing…", "/api/analyze");
-          const data = await apiJson("/api/analyze", { pdf_base64: pdfBase64, text: pasted || null, target_role: targetRole || null });
+          const data = await apiJson("/api/analyze", {
+            pdf_base64: pdfBase64,
+            text: pasted || null,
+            target_role: targetRole || null,
+            model: model || null,
+          });
 
           state.analysis = data.analysis;
           state.extractedText = data.extracted_text;
@@ -574,12 +590,14 @@
         try {
           if (!state.analysis || !state.extractedText) throw new Error("Run analysis first.");
           const targetRole = ui.targetRole.value.trim();
+          const model = ui.modelName.value.trim();
 
           setStatus("Optimizing…", "/api/optimize");
           const data = await apiJson("/api/optimize", {
             text: state.extractedText,
             analysis: state.analysis,
             target_role: targetRole || null,
+            model: model || null,
           });
 
           ui.optimizedText.value = data.optimized_text || "";

@@ -47,10 +47,11 @@ export async function handler(event) {
     const text = String(body?.text || "").trim();
     const analysis = body?.analysis || null;
     const targetRole = body?.target_role || null;
-    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:120b-cloud";
+    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:20b-cloud";
 
     if (!text) return errorResponse(400, "Provide `text`.");
     if (!analysis) return errorResponse(400, "Provide `analysis` from /api/analyze.");
+    if (text.length > 18000) return errorResponse(413, "Resume text is too long to optimize reliably. Please shorten it or optimize section-by-section.");
 
     const prompt = buildOptimizePrompt({ resumeText: text, analysis, targetRole });
     const modelText = await chatToString({

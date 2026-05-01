@@ -3,7 +3,7 @@ import { errorResponse, getJsonBody, jsonResponse, requireEnv } from "./_utils.j
 
 function getClient() {
   return new Ollama({
-    host: "https://ollama.com",
+    host: process.env.OLLAMA_HOST || "https://ollama.com",
     headers: {
       Authorization: "Bearer " + requireEnv("OLLAMA_API_KEY"),
     },
