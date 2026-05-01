@@ -45,7 +45,7 @@ STRICT SCORING RULES:
    - A well-documented, high-impact achievement that isn't JD-relevant is still a "High Quality Input" and should be scored accordingly (e.g., 70-80 for quality), whereas a vague or poorly written item is a 0-20.
 3. NO HALLUCINATION: If the data is missing from the text entirely, the score is 0.
 4. OUTPUT: Return ONLY a raw JSON object. No markdown, no code fences, no preamble.
-5. 
+5. JOB DESCRIPTION MATCH: Ruthlessly verify if the Job Description matches the resume.
 
 JSON SCHEMA:
 {
