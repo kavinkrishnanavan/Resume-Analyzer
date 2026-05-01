@@ -14,8 +14,7 @@ import {
 function buildAnalysisPrompt({ resumeText, targetJobDescription }) {
   const rubrics = [
     // --- 1. JOB DESCRIPTION ALIGNMENT: CORE (15) ---
-    "JD: Exact Job Title Match or Logical Progression", "JD: Years of Experience vs Requirement", "JD: Industry Sector Alignment", "JD: Seniority Level Congruency", "JD: Primary Responsibility Coverage", "JD: Secondary Responsibility Coverage", "JD: Essential Requirement Satisfaction", "JD: Preferred/Bonus Qualification Matching", "JD: Regional/Location Requirement Check", "JD: Language Proficiency Requirements", "JD: Company Culture Keyword Alignment", "JD: Product/Service Familiarity", "JD: Business Model Experience (B2B/B2C)", "JD: Stakeholder Management Level", "JD: Regulatory/Compliance Alignment",
-
+   
     // --- 2. SKILL ANALYSIS & INPUT QUALITY (20) ---
     "Skills: Hard Skill #1 Match (or Technical Depth if non-JD)", "Skills: Hard Skill #2 Match (or Technical Depth if non-JD)", "Skills: Hard Skill #3 Match (or Technical Depth if non-JD)", "Skills: Tech Stack Tool A Alignment/Quality", "Skills: Tech Stack Tool B Alignment/Quality", "Skills: Legacy Skill Bloat (Is non-JD tech relevant or clutter?)", "Skills: Methodology Match (Agile/Scrum/Lean)", "Skills: Domain-Specific Vocabulary Precision", "Skills: Software/SaaS Tool Proficiency", "Skills: Scripting/Programming Language Depth", "Skills: Certification Requirement/Merit", "Skills: License/Accreditation Validation", "Skills: Technical Breadth vs JD Requirements", "Skills: Technical Depth vs JD Requirements", "Skills: Framework/Library Recency", "Skills: Soft Skill Evidence in Context", "Skills: Database/Infrastructure Logic", "Skills: API/Integration Presentation", "Skills: Security/Safety Protocol Knowledge", "Skills: Data Analysis/Visualization Execution",
 
@@ -31,8 +30,7 @@ function buildAnalysisPrompt({ resumeText, targetJobDescription }) {
     // --- 6. EDUCATION & CREDENTIALS (10) ---
     "Edu: Degree Level vs JD Requirement", "Edu: Major/Field Relevance to JD", "Edu: University/Institution Credibility", "Edu: Graduation Date Presence", "Edu: Honors/Awards Context", "Edu: Continuing Education/CEUs", "Edu: GPA (If JD-required/Early career)", "Edu: Placement Strategy (Top vs Bottom)", "Edu: Professional Development Relevance", "Edu: Thesis/Project Relevance to JD",
 
-    // --- 7. STRATEGIC AUDIT & RED FLAGS (10) ---
-    "Red Flag: Job Hopping (>3 jobs in 2 years)", "Red Flag: Career Plateau (Stagnant titles)", "Red Flag: Unexplained Gaps (>4 months)", "Red Flag: Title Inflation (Unverifiable seniority)", "Red Flag: Vague Descriptions (No substance)", "Strategy: Professional Summary Sharpness", "Strategy: Career Trajectory Logic", "Strategy: Geographic/Relocation Feasibility", "Strategy: Outdated Technology Usage", "Strategy: Over-qualification (Flight risk)"
+    "Strategy: Professional Summary Sharpness", "Strategy: Career Trajectory Logic", "Strategy: Geographic/Relocation Feasibility", "Strategy: Outdated Technology Usage", "Strategy: Over-qualification (Flight risk)"
   ];
 
   return `
@@ -40,13 +38,14 @@ You are a cynical, elite Executive Recruiter and ATS Auditor.
 Your goal is to perform a 100-point "Stress Test" on the provided resume against the Target Job Description (JD).
 
 STRICT SCORING RULES:
-1. RUTHLESSNESS: Scores above 90 are nearly impossible. An average "good" resume is a 50-60.
+1. RUTHLESSNESS: Scores very strictly and identify failure points.
 2. THE "QUALITY FALLBACK" RULE: 
    - If a specific skill, project, or metric in the resume IS NOT in the JD, DO NOT give a zero.
    - Instead, evaluate the **INPUT QUALITY**: How well is it quantified? How professional is the formatting? Is the technical depth impressive? 
    - A well-documented, high-impact achievement that isn't JD-relevant is still a "High Quality Input" and should be scored accordingly (e.g., 70-80 for quality), whereas a vague or poorly written item is a 0-20.
 3. NO HALLUCINATION: If the data is missing from the text entirely, the score is 0.
 4. OUTPUT: Return ONLY a raw JSON object. No markdown, no code fences, no preamble.
+5. 
 
 JSON SCHEMA:
 {
