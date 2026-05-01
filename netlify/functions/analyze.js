@@ -10,89 +10,50 @@ import {
 } from "./_utils.js";
 
 
-function buildAnalysisPrompt({ resumeText, targetRole }) {
+/**
+ * Generates an ultra-ruthless, 100-point rubric prompt for an LLM to analyze a resume
+ * against a specific Job Description (JD).
+ * 
+ * @param {Object} params
+ * @param {string} params.resumeText - The raw text extracted from the resume.
+ * @param {string} params.targetJobDescription - The full text of the job description.
+ * @returns {string} The formatted prompt string.
+ */
+function buildAnalysisPrompt({ resumeText, targetJobDescription }) {
   const rubrics = [
-    // --- 1. ATS & PARSABILITY (8 Points) ---
-    "ATS: Table/Column Usage (Detection of complex layouts)",
-    "ATS: Standard Section Heading Naming",
-    "ATS: Contact Info Placement (Header vs Body)",
-    "ATS: Font Accessibility (Standard vs Non-standard)",
-    "ATS: Removal of Graphics/Icons/Images",
-    "ATS: Bullet Point Symbol Compatibility",
-    "ATS: Keyword Frequency (Target Role Alignment)",
-    "ATS: File Structure Logic (Chronological vs Functional)",
+    // --- 1. JOB DESCRIPTION ALIGNMENT: CORE (15) ---
+    "JD: Exact Job Title Match or Logical Progression", "JD: Years of Experience vs Requirement", "JD: Industry Sector Alignment", "JD: Seniority Level Congruency", "JD: Primary Responsibility Coverage", "JD: Secondary Responsibility Coverage", "JD: Essential Requirement Satisfaction", "JD: Preferred/Bonus Qualification Matching", "JD: Regional/Location Requirement Check", "JD: Language Proficiency Requirements", "JD: Company Culture Keyword Alignment", "JD: Product/Service Familiarity", "JD: Business Model Experience (B2B/B2C)", "JD: Stakeholder Management Level", "JD: Regulatory/Compliance Alignment",
 
-    // --- 2. IMPACT & QUANTIFICATION (10 Points) ---
-    "Impact: Hard Revenue/Profit Figures",
-    "Impact: Percentage-based Improvements",
-    "Impact: Time-saving/Efficiency Metrics",
-    "Impact: Scale of Responsibility (Budget/Team Size)",
-    "Impact: Frequency of Tasks (Daily/Monthly volumes)",
-    "Impact: STAR Method Execution (Situation/Task/Action/Result)",
-    "Impact: XYZ Formula Utilization",
-    "Impact: Market/Industry Context for Achievements",
-    "Impact: Evidence of Scope (Local vs Global)",
-    "Impact: Awards, Recognition, or Promotions",
+    // --- 2. SKILL GAP ANALYSIS (20) ---
+    "Skills: Hard Skill #1 Match from JD", "Skills: Hard Skill #2 Match from JD", "Skills: Hard Skill #3 Match from JD", "Skills: Tech Stack Tool A Alignment", "Skills: Tech Stack Tool B Alignment", "Skills: Legacy Skill Bloat (Removing JD-irrelevant tech)", "Skills: Methodology Match (Agile/Scrum/Lean)", "Skills: Domain-Specific Vocabulary Usage", "Skills: Software/SaaS Tool Proficiency", "Skills: Scripting/Programming Language Match", "Skills: Certification Requirement Fulfillment", "Skills: License/Accreditation Validation", "Skills: Technical Breadth vs JD Depth", "Skills: Technical Depth vs JD Breadth", "Skills: Framework/Library Recency", "Skills: Soft Skill Evidence in Context", "Skills: Database/Infrastructure Alignment", "Skills: API/Integration Experience", "Skills: Security/Safety Protocol Knowledge", "Skills: Data Analysis/Visualization Tools",
 
-    // --- 3. WRITING & TONE (10 Points) ---
-    "Tone: Action Verb Variety (No repetitive 'Managed')",
-    "Tone: Elimination of First Person (I, me, my)",
-    "Tone: Elimination of Third Person (He, she, [Name])",
-    "Tone: Removal of Subjective Adjectives (e.g., 'Passionate')",
-    "Tone: Removal of Corporate Cliches/Fluff",
-    "Tone: Active vs Passive Voice Ratio",
-    "Tone: Professional Industry-Specific Vocabulary",
-    "Tone: Sentence Length Diversity",
-    "Tone: Concise Delivery (No 'Responsible for...')",
-    "Tone: Parallelism in Lists",
+    // --- 3. QUANTIFICATION & ROI (15) ---
+    "ROI: Revenue Impact Matching JD Goals", "ROI: Cost Reduction Metrics", "ROI: Efficiency/Time-Saving Quantified", "ROI: Scale of Impact (JD-relevant volume)", "ROI: Team/Budget Management Scale", "ROI: Project Completion Timelines", "ROI: Error Rate/Quality Improvement", "ROI: STAR Method: Contextual relevance to JD", "ROI: XYZ Formula: Specificity of Result", "ROI: Data-Driven Decision Making Evidence", "ROI: KPI Ownership Clarity", "ROI: Market Share Growth Attribution", "ROI: Retention/Churn Metric Alignment", "ROI: Automation/Scaling Proof", "ROI: Customer/Client Satisfaction Metrics",
 
-    // --- 4. TECHNICAL & SKILLS (8 Points) ---
-    "Skills: Hard Skill Extraction Accuracy",
-    "Skills: Tool Proficiency Levels (Beginner vs Expert)",
-    "Skills: Skill Integration within Experience Bullets",
-    "Skills: Separation of Tools vs Frameworks vs Methods",
-    "Skills: Recency of Technical Skills",
-    "Skills: Certification/License Verifiability",
-    "Skills: Relevance of Skills to Target Role",
-    "Skills: Soft Skill Evidence (Demonstrated, not listed)",
+    // --- 4. ATS & STRUCTURAL INTEGRITY (15) ---
+    "ATS: Section Header Standardized Parsing", "ATS: Multi-Column Layout Interference", "ATS: Graphic/Icon/Chart Noise", "ATS: Font Compatibility (Sans-Serif)", "ATS: Text Layer Extraction Quality", "ATS: Chronological Order Strictness", "ATS: Date Formatting Consistency", "ATS: Contact Info Header Extraction", "ATS: Keyword Density (Avoidance of Stuffing)", "ATS: File Length (Page Count vs Experience)", "ATS: Whitespace/Margin Ratio", "ATS: Bullet Point Symbol Standard", "ATS: Table/Grid Usage Risk", "ATS: Hyperlink Validity", "ATS: Bold/Italic Parsing Noise",
 
-    // --- 5. FORMAT & CONSISTENCY (7 Points) ---
-    "Format: Date Format Uniformity (e.g., MM/YYYY)",
-    "Format: Location Formatting Consistency",
-    "Format: Punctuation Consistency (End-of-bullet periods)",
-    "Format: Tense Consistency (Present for current, Past for old)",
-    "Format: Bold/Italic Usage Logic",
-    "Format: Proper Noun Capitalization",
-    "Format: White Space Distribution",
+    // --- 5. TONE & WRITING QUALITY (15) ---
+    "Tone: Action Verb Strength (Front-loaded)", "Tone: Elimination of First Person (I, me)", "Tone: Elimination of Passive Voice", "Tone: Buzzword/Corporate Fluff Removal", "Tone: Subjective Adjectives (Passionate/Driven)", "Tone: Industry Jargon Accuracy", "Grammar: Tense Consistency (Current/Past)", "Grammar: Punctuation Uniformity", "Grammar: Spelling Accuracy", "Grammar: Proper Noun Capitalization", "Grammar: Number Formatting (Digits vs Words)", "Grammar: Sentence Structure Clarity", "Grammar: Run-on Sentence Detection", "Grammar: Filler Word Elimination", "Grammar: Overall Professionalism Score",
 
-    // --- 6. STRATEGY & RED FLAGS (7 Points) ---
-    "Strategy: Employment Gap Identification",
-    "Strategy: Career Progression/Upward Mobility",
-    "Strategy: Over-qualification/Under-qualification Risk",
-    "Strategy: Resume Length Appropriateness",
-    "Strategy: Education Level Relevance",
-    "Strategy: Professional Summary/Objective Sharpness",
-    "Strategy: Contact Information Professionalism"
+    // --- 6. EDUCATION & CREDENTIALS (10) ---
+    "Edu: Degree Level vs JD Requirement", "Edu: Major/Field Relevance to JD", "Edu: University/Institution Credibility", "Edu: Graduation Date Presence", "Edu: Honors/Awards Context", "Edu: Continuing Education/CEUs", "Edu: GPA (If JD-required/Early career)", "Edu: Placement Strategy (Top vs Bottom)", "Edu: Professional Development Relevance", "Edu: Thesis/Project Relevance to JD",
+
+    // --- 7. RUTHLESS STRATEGY & RED FLAGS (10) ---
+    "Red Flag: Job Hopping (>3 jobs in 2 years)", "Red Flag: Career Plateau (Stagnant titles)", "Red Flag: Unexplained Gaps (>4 months)", "Red Flag: Title Inflation (Unverifiable seniority)", "Red Flag: Vague Descriptions (No substance)", "Strategy: Professional Summary Sharpness", "Strategy: Career Trajectory Logic", "Strategy: Geographic/Relocation Feasibility", "Strategy: Outdated Technology Usage", "Strategy: Over-qualification (Flight risk)"
   ];
 
   return `
-You are a ruthless, world-class executive recruiter and a highly sophisticated ATS algorithm. 
-Your goal is to tear apart the provided resume with extreme prejudice. Do not be "nice." Do not "encourage." Be objective, technical, and hyper-critical.
+You are a cynical, elite Technical Recruiter conducting a high-stakes audit. 
+Your goal is to REJECT this candidate by finding every possible failure in their alignment with the provided Job Description.
 
-STRICT OPERATING CONSTRAINTS:
-1. OUTPUT: Return a SINGLE JSON object. NO markdown, NO code fences (\`\`\`), NO preamble.
-2. EVIDENCE ONLY: Do not invent facts. If a metric isn't there, score that rubric 0. 
-3. SCORING SCALE: 
-   - 0-30: Fatal flaws / Missing entirely.
-   - 31-60: Present but weak/generic.
-   - 61-85: Strong and quantified.
-   - 86-100: World-class; impossible to improve.
-4. FIELD LOGIC:
-   - "missing_keywords": Hard technical skills and industry terms only.
-   - "recommendations_editable": Rewrites that do NOT require new info from the user.
-   - "user_only_issues": Questions about missing data, gaps, or unverifiable claims.
+STRICT PROTOCOLS:
+1. RUTHLESS EVALUATION: Scores above 90 are reserved for perfect matches. A "good" resume is a 60.
+2. JD-CENTRIC: Every rubric point must be evaluated THROUGH THE LENS of the Job Description. If the JD requires HYSYS and the resume lists "Simulation Software," score it poorly for lack of specificity.
+3. NO HALLUCINATION: If the data isn't there, the score is 0. Do not be "generous."
+4. OUTPUT: Return ONLY a raw JSON object. No markdown, no code fences, no preamble.
 
-EXPECTED JSON SCHEMA:
+JSON SCHEMA:
 {
   "overall_score_percent": number,
   "rubrics": [
@@ -104,14 +65,18 @@ EXPECTED JSON SCHEMA:
   "user_only_issues": string[]
 }
 
-TARGET ROLE:
-${targetRole ? JSON.stringify(targetRole) : "\"Not specified - evaluate against general professional standards\""}
+TARGET JOB DESCRIPTION:
+---
+${targetJobDescription}
+---
 
-RUBRICS TO EVALUATE (You must evaluate all 50 items):
-${rubrics.map((r) => `- ${r}`).join("\n")}
+RUBRICS TO SCORE (Evaluate all 100 points):
+${rubrics.map((r, i) => `${i + 1}. ${r}`).join("\n")}
 
-RESUME TEXT:
+RESUME TEXT FOR AUDIT:
+---
 ${resumeText}
+---
 `.trim();
 }
 
