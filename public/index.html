@@ -422,6 +422,7 @@
       }
 
       function renderAnalysis(analysis) {
+        
         const rubricRows = analysis.rubrics
           .map((r) => {
             const cls = scoreClass(r.score_percent);
@@ -437,7 +438,6 @@
           })
           .join("");
 
-          console.log(rubricRows)
 
         const skills = analysis.skills_present?.length ? analysis.skills_present : ["(none detected)"];
         const missing = analysis.missing_keywords?.length ? analysis.missing_keywords : ["(none)"];
@@ -594,12 +594,15 @@
           const targetRole = ui.targetRole.value.trim();
           const model = ui.modelName.value.trim();
 
+          console.log(state.analysis)
+
           setStatus("Optimizing…", "/api/optimize");
           const data = await apiJson("/api/optimize", {
             text: state.extractedText,
             analysis: state.analysis,
             target_role: targetRole || null,
-            model: model || null
+            model: model || null,
+            rubric_output: 
             
           });
 
