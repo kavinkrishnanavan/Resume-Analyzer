@@ -10,25 +10,17 @@ import {
 } from "./_utils.js";
 
 
-/**
- * Generates an ultra-ruthless, 100-point rubric prompt for an LLM to analyze a resume
- * against a specific Job Description (JD).
- * 
- * @param {Object} params
- * @param {string} params.resumeText - The raw text extracted from the resume.
- * @param {string} params.targetJobDescription - The full text of the job description.
- * @returns {string} The formatted prompt string.
- */
+
 function buildAnalysisPrompt({ resumeText, targetJobDescription }) {
   const rubrics = [
     // --- 1. JOB DESCRIPTION ALIGNMENT: CORE (15) ---
     "JD: Exact Job Title Match or Logical Progression", "JD: Years of Experience vs Requirement", "JD: Industry Sector Alignment", "JD: Seniority Level Congruency", "JD: Primary Responsibility Coverage", "JD: Secondary Responsibility Coverage", "JD: Essential Requirement Satisfaction", "JD: Preferred/Bonus Qualification Matching", "JD: Regional/Location Requirement Check", "JD: Language Proficiency Requirements", "JD: Company Culture Keyword Alignment", "JD: Product/Service Familiarity", "JD: Business Model Experience (B2B/B2C)", "JD: Stakeholder Management Level", "JD: Regulatory/Compliance Alignment",
 
-    // --- 2. SKILL GAP ANALYSIS (20) ---
-    "Skills: Hard Skill #1 Match from JD", "Skills: Hard Skill #2 Match from JD", "Skills: Hard Skill #3 Match from JD", "Skills: Tech Stack Tool A Alignment", "Skills: Tech Stack Tool B Alignment", "Skills: Legacy Skill Bloat (Removing JD-irrelevant tech)", "Skills: Methodology Match (Agile/Scrum/Lean)", "Skills: Domain-Specific Vocabulary Usage", "Skills: Software/SaaS Tool Proficiency", "Skills: Scripting/Programming Language Match", "Skills: Certification Requirement Fulfillment", "Skills: License/Accreditation Validation", "Skills: Technical Breadth vs JD Depth", "Skills: Technical Depth vs JD Breadth", "Skills: Framework/Library Recency", "Skills: Soft Skill Evidence in Context", "Skills: Database/Infrastructure Alignment", "Skills: API/Integration Experience", "Skills: Security/Safety Protocol Knowledge", "Skills: Data Analysis/Visualization Tools",
+    // --- 2. SKILL ANALYSIS & INPUT QUALITY (20) ---
+    "Skills: Hard Skill #1 Match (or Technical Depth if non-JD)", "Skills: Hard Skill #2 Match (or Technical Depth if non-JD)", "Skills: Hard Skill #3 Match (or Technical Depth if non-JD)", "Skills: Tech Stack Tool A Alignment/Quality", "Skills: Tech Stack Tool B Alignment/Quality", "Skills: Legacy Skill Bloat (Is non-JD tech relevant or clutter?)", "Skills: Methodology Match (Agile/Scrum/Lean)", "Skills: Domain-Specific Vocabulary Precision", "Skills: Software/SaaS Tool Proficiency", "Skills: Scripting/Programming Language Depth", "Skills: Certification Requirement/Merit", "Skills: License/Accreditation Validation", "Skills: Technical Breadth vs JD Requirements", "Skills: Technical Depth vs JD Requirements", "Skills: Framework/Library Recency", "Skills: Soft Skill Evidence in Context", "Skills: Database/Infrastructure Logic", "Skills: API/Integration Presentation", "Skills: Security/Safety Protocol Knowledge", "Skills: Data Analysis/Visualization Execution",
 
     // --- 3. QUANTIFICATION & ROI (15) ---
-    "ROI: Revenue Impact Matching JD Goals", "ROI: Cost Reduction Metrics", "ROI: Efficiency/Time-Saving Quantified", "ROI: Scale of Impact (JD-relevant volume)", "ROI: Team/Budget Management Scale", "ROI: Project Completion Timelines", "ROI: Error Rate/Quality Improvement", "ROI: STAR Method: Contextual relevance to JD", "ROI: XYZ Formula: Specificity of Result", "ROI: Data-Driven Decision Making Evidence", "ROI: KPI Ownership Clarity", "ROI: Market Share Growth Attribution", "ROI: Retention/Churn Metric Alignment", "ROI: Automation/Scaling Proof", "ROI: Customer/Client Satisfaction Metrics",
+    "ROI: Revenue Impact (JD Alignment or General Metric Quality)", "ROI: Cost Reduction Metrics", "ROI: Efficiency/Time-Saving Quantified", "ROI: Scale of Impact (Volume/Reach)", "ROI: Team/Budget Management Scale", "ROI: Project Completion Timelines", "ROI: Error Rate/Quality Improvement", "ROI: STAR Method: Execution Quality", "ROI: XYZ Formula: Specificity of Result", "ROI: Data-Driven Decision Making Evidence", "ROI: KPI Ownership Clarity", "ROI: Market Share Growth Attribution", "ROI: Retention/Churn Metric Quality", "ROI: Automation/Scaling Proof", "ROI: Customer/Client Satisfaction Metrics",
 
     // --- 4. ATS & STRUCTURAL INTEGRITY (15) ---
     "ATS: Section Header Standardized Parsing", "ATS: Multi-Column Layout Interference", "ATS: Graphic/Icon/Chart Noise", "ATS: Font Compatibility (Sans-Serif)", "ATS: Text Layer Extraction Quality", "ATS: Chronological Order Strictness", "ATS: Date Formatting Consistency", "ATS: Contact Info Header Extraction", "ATS: Keyword Density (Avoidance of Stuffing)", "ATS: File Length (Page Count vs Experience)", "ATS: Whitespace/Margin Ratio", "ATS: Bullet Point Symbol Standard", "ATS: Table/Grid Usage Risk", "ATS: Hyperlink Validity", "ATS: Bold/Italic Parsing Noise",
@@ -39,18 +31,21 @@ function buildAnalysisPrompt({ resumeText, targetJobDescription }) {
     // --- 6. EDUCATION & CREDENTIALS (10) ---
     "Edu: Degree Level vs JD Requirement", "Edu: Major/Field Relevance to JD", "Edu: University/Institution Credibility", "Edu: Graduation Date Presence", "Edu: Honors/Awards Context", "Edu: Continuing Education/CEUs", "Edu: GPA (If JD-required/Early career)", "Edu: Placement Strategy (Top vs Bottom)", "Edu: Professional Development Relevance", "Edu: Thesis/Project Relevance to JD",
 
-    // --- 7. RUTHLESS STRATEGY & RED FLAGS (10) ---
+    // --- 7. STRATEGIC AUDIT & RED FLAGS (10) ---
     "Red Flag: Job Hopping (>3 jobs in 2 years)", "Red Flag: Career Plateau (Stagnant titles)", "Red Flag: Unexplained Gaps (>4 months)", "Red Flag: Title Inflation (Unverifiable seniority)", "Red Flag: Vague Descriptions (No substance)", "Strategy: Professional Summary Sharpness", "Strategy: Career Trajectory Logic", "Strategy: Geographic/Relocation Feasibility", "Strategy: Outdated Technology Usage", "Strategy: Over-qualification (Flight risk)"
   ];
 
   return `
-You are a cynical, elite Technical Recruiter conducting a high-stakes audit. 
-Your goal is to REJECT this candidate by finding every possible failure in their alignment with the provided Job Description.
+You are a cynical, elite Executive Recruiter and ATS Auditor. 
+Your goal is to perform a 100-point "Stress Test" on the provided resume against the Target Job Description (JD).
 
-STRICT PROTOCOLS:
-1. RUTHLESS EVALUATION: Scores above 90 are reserved for perfect matches. A "good" resume is a 60.
-2. JD-CENTRIC: Every rubric point must be evaluated THROUGH THE LENS of the Job Description. If the JD requires HYSYS and the resume lists "Simulation Software," score it poorly for lack of specificity.
-3. NO HALLUCINATION: If the data isn't there, the score is 0. Do not be "generous."
+STRICT SCORING RULES:
+1. RUTHLESSNESS: Scores above 90 are nearly impossible. An average "good" resume is a 50-60.
+2. THE "QUALITY FALLBACK" RULE: 
+   - If a specific skill, project, or metric in the resume IS NOT in the JD, DO NOT give a zero.
+   - Instead, evaluate the **INPUT QUALITY**: How well is it quantified? How professional is the formatting? Is the technical depth impressive? 
+   - A well-documented, high-impact achievement that isn't JD-relevant is still a "High Quality Input" and should be scored accordingly (e.g., 70-80 for quality), whereas a vague or poorly written item is a 0-20.
+3. NO HALLUCINATION: If the data is missing from the text entirely, the score is 0.
 4. OUTPUT: Return ONLY a raw JSON object. No markdown, no code fences, no preamble.
 
 JSON SCHEMA:
@@ -70,7 +65,7 @@ TARGET JOB DESCRIPTION:
 ${targetJobDescription}
 ---
 
-RUBRICS TO SCORE (Evaluate all 100 points):
+RUBRICS TO SCORE (Evaluate every single point):
 ${rubrics.map((r, i) => `${i + 1}. ${r}`).join("\n")}
 
 RESUME TEXT FOR AUDIT:
