@@ -12,16 +12,14 @@ function getClient() {
 
 async function chatToString({ model, messages }) {
   const client = getClient();
+  // Prefer non-streaming responses in Netlify Functions to avoid upstream/proxy
+  // inactivity timeouts when a model pauses between streamed chunks.
   const response = await client.chat({
     model,
     messages,
-    stream: true,
+    stream: false,
   });
-  let text = "";
-  for await (const part of response) {
-    text += part?.message?.content ?? "";
-  }
-  return text;
+  return response?.message?.content ?? "";
 }
 
 export async function handler(event) {
@@ -34,10 +32,15 @@ export async function handler(event) {
     const text = await chatToString({ model, messages });
     return jsonResponse(200, { model, text });
   } catch (err) {
-    const msg = err?.code === "MISSING_ENV" ? err.message : "Ollama request failed.";
+    const rawMsg = String(err?.message || "");
+    const msg =
+      err?.code === "MISSING_ENV"
+        ? err.message
+        : rawMsg.includes("Inactivity Timeout")
+          ? "Ollama request timed out (inactivity). Try again, reduce resume length, or use a faster model."
+          : "Ollama request failed.";
     return errorResponse(500, msg, err?.message ? String(err.message) : undefined);
   }
 }
 
 export { chatToString };
-

@@ -47,13 +47,14 @@ export async function handler(event) {
     const text = String(body?.text || "").trim();
     const analysis = body?.analysis || null;
     const targetRole = body?.target_role || null;
+    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:120b-cloud";
 
     if (!text) return errorResponse(400, "Provide `text`.");
     if (!analysis) return errorResponse(400, "Provide `analysis` from /api/analyze.");
 
     const prompt = buildOptimizePrompt({ resumeText: text, analysis, targetRole });
     const modelText = await chatToString({
-      model: "gpt-oss:120b",
+      model,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -74,4 +75,3 @@ export async function handler(event) {
     return errorResponse(500, "Optimize failed.", err?.message ? String(err.message) : undefined);
   }
 }
-

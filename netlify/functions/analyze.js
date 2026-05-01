@@ -96,6 +96,7 @@ export async function handler(event) {
     const pdfBase64 = body?.pdf_base64 || null;
     const text = body?.text || null;
     const targetRole = body?.target_role || null;
+    const model = body?.model || process.env.OLLAMA_MODEL || "gpt-oss:120b-cloud";
 
     if (!pdfBase64 && !text) return errorResponse(400, "Provide `pdf_base64` or `text`.");
     // Netlify/AWS request payload limits are small; base64 adds overhead.
@@ -108,7 +109,7 @@ export async function handler(event) {
 
     const prompt = buildAnalysisPrompt({ resumeText: extractedText, targetRole });
     const modelText = await chatToString({
-      model: "gpt-oss:120b",
+      model,
       messages: [{ role: "user", content: prompt }],
     });
 
