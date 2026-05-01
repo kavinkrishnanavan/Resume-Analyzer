@@ -476,9 +476,18 @@
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
         });
-        const data = await res.json().catch(() => ({}));
+        const rawText = await res.text();
+        const data = (() => {
+          try {
+            return rawText ? JSON.parse(rawText) : {};
+          } catch {
+            return { _raw: rawText };
+          }
+        })();
         if (!res.ok) {
-          const msg = data?.error || `Request failed (${res.status})`;
+          const msg =
+            data?.error ||
+            (data?._raw ? `Request failed (${res.status}): ${String(data._raw).slice(0, 280)}` : `Request failed (${res.status})`);
           throw new Error(msg);
         }
         return data;
@@ -536,7 +545,8 @@
           const targetRole = ui.targetRole.value.trim();
 
           if (!pdf && !pasted) throw new Error("Upload a PDF or paste resume text.");
-          if (pdf && pdf.size > 10 * 1024 * 1024) throw new Error("PDF is too large. Please use ≤ 10MB.");
+          // Netlify Functions have a ~6MB request limit; base64 adds ~33% overhead.
+          if (pdf && pdf.size > 4 * 1024 * 1024) throw new Error("PDF is too large for upload. Please use ≤ 4MB (or paste text).");
 
           let pdfBase64 = null;
           if (pdf) {

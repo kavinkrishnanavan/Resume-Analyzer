@@ -98,6 +98,10 @@ export async function handler(event) {
     const targetRole = body?.target_role || null;
 
     if (!pdfBase64 && !text) return errorResponse(400, "Provide `pdf_base64` or `text`.");
+    // Netlify/AWS request payload limits are small; base64 adds overhead.
+    if (pdfBase64 && String(pdfBase64).length > 5_600_000) {
+      return errorResponse(413, "PDF payload too large. Use a smaller PDF (≤ 4MB) or paste text.");
+    }
 
     const extractedText = pdfBase64 ? await extractTextFromPdfBase64(pdfBase64) : String(text).trim();
     if (!extractedText) return errorResponse(400, "Empty resume text.");
@@ -123,4 +127,3 @@ export async function handler(event) {
     return errorResponse(500, "Analyze failed.", err?.message ? String(err.message) : undefined);
   }
 }
-
