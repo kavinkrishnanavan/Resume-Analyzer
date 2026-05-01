@@ -423,7 +423,6 @@
 
       function renderAnalysis(analysis) {
         const rubricRows = analysis.rubrics
-        console.log(rubricRows)
           .map((r) => {
             const cls = scoreClass(r.score_percent);
             return `
@@ -437,6 +436,8 @@
             `;
           })
           .join("");
+
+          console.log(rubricRows)
 
         const skills = analysis.skills_present?.length ? analysis.skills_present : ["(none detected)"];
         const missing = analysis.missing_keywords?.length ? analysis.missing_keywords : ["(none)"];

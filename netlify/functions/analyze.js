@@ -92,7 +92,7 @@ STRICT OPERATING CONSTRAINTS:
    - "recommendations_editable": Rewrites that do NOT require new info from the user.
    - "user_only_issues": Questions about missing data, gaps, or unverifiable claims.
 
-JSON SCHEMA:
+EXPECTED JSON SCHEMA:
 {
   "overall_score_percent": number,
   "rubrics": [
