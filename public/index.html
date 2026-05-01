@@ -423,6 +423,7 @@
 
       function renderAnalysis(analysis) {
         const rubricRows = analysis.rubrics
+        console.log(rubricRows)
           .map((r) => {
             const cls = scoreClass(r.score_percent);
             return `
@@ -597,7 +598,8 @@
             text: state.extractedText,
             analysis: state.analysis,
             target_role: targetRole || null,
-            model: model || null,
+            model: model || null
+            
           });
 
           ui.optimizedText.value = data.optimized_text || "";

@@ -24,7 +24,7 @@ Schema:
   "not_applied_because_user_only": string[]
 }
 
-Target role (may be empty): ${targetRole ? JSON.stringify(targetRole) : "\"\""}
+Target role: ${targetRole ? JSON.stringify(targetRole) : "\"\""}
 
 User-only issues (DO NOT change these; keep the resume as-is for those):
 ${userOnlyIssues.length ? userOnlyIssues.map((x) => `- ${x}`).join("\n") : "- (none)"}
@@ -35,6 +35,8 @@ ${recommendations.length ? recommendations.map((x) => `- ${x}`).join("\n") : "- 
 Missing keywords: ONLY incorporate a missing keyword if it is ALREADY true and implied/present in the resume text.
 If not already true, do NOT add it.
 ${missingKeywords.length ? missingKeywords.map((x) => `- ${x}`).join("\n") : "- (none)"}
+
+
 
 Resume text:
 ${resumeText}
