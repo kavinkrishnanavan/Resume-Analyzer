@@ -1,3 +1,5 @@
+import { Ollama } from "ollama";
+
 export async function handler(event) {
   try {
     const { prompt } = JSON.parse(event.body || "{}");
@@ -5,46 +7,24 @@ export async function handler(event) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing prompt" }) };
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "OPENROUTER_API_KEY is not set" })
-      };
-    }
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
+    const ollama = new Ollama({
+      host: "https://ollama.com",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Accept": "application/json",
-        "Content-Type": "application/json"
+        Authorization: "Bearer " + process.env.OLLAMA_API_KEY,
       },
-      body: JSON.stringify({
-        model: "openai/gpt-oss-120b:free",
-        stream: false,
-        messages: [
-          { role: "user", content: prompt}
-        ]
-      })
     });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      return {
-        statusCode: response.status,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          error: "OpenRouter request failed",
-          status: response.status,
-          details: errText
-        })
-      };
-    }
+    const response = await ollama.chat({
+      model: "gpt-oss:120b",
+      messages: [{ role: "user", content: prompt }],
+      stream: true,
+    });
 
-    const data = await response.json();
-    const content =
-      data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? "";
+    let fullText = "";
+    for await (const part of response) {
+      fullText += part.message.content;
+      process.stdout.write(part.message.content);
+    }
 
     return {
       statusCode: 200,
@@ -52,7 +32,7 @@ export async function handler(event) {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache"
       },
-      body: String(content)
+      body: fullText
     };
 
   } catch (err) {
