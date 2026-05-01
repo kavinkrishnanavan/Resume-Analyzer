@@ -11,48 +11,88 @@ import {
 
 function buildAnalysisPrompt({ resumeText, targetRole }) {
   const rubrics = [
-    "ATS Keyword Coverage",
-    "Role Fit (Target Role)",
-    "Impact & Metrics",
-    "Clarity & Brevity",
-    "Structure & Readability",
-    "Consistency (dates/tense/format)",
-    "Action Verbs & Ownership",
-    "Evidence of Skills (projects/experience)",
-    "Red Flags (gaps/unclear claims)",
+    // --- ATS & Parsing ---
+    "ATS Parsability & Formatting (Hidden tables, graphics, complex columns)",
+    "Standardized Section Headers (Experience, Education, Skills)",
+    "Keyword Optimization & Density (Target Role alignment)",
+
+    // --- Content & Impact ---
+    "Quantifiable Impact ($, %, time saved, specific metrics)",
+    "Action-Result Linkage (Use of STAR/XYZ formats)",
+    "Action Verbs & Active Voice (Strong, varied verbs)",
+    "Skill Evidence Integration (Skills demonstrated in bullets, not just listed)",
+    "Relevance to Target Role (Prioritization of relevant experience)",
+
+    // --- Tone & Professionalism ---
+    "Elimination of Fluff & Clichés ('Team player', 'Synergy', etc.)",
+    "Pronoun Usage (Zero 1st/3rd person pronouns: I, me, he, she)",
+    "Clarity, Brevity & Readability (Avoiding run-on sentences or dense blocks)",
+
+    // --- Mechanics & Consistency ---
+    "Chronological Consistency (Dates, missing gaps)",
+    "Tense Consistency (Past tense for past roles, present for current)",
+    "Grammar, Spelling & Typographical Accuracy",
+
+    // --- Strategy & Red Flags ---
+    "Career Trajectory & Progression (Evidence of growth or promotions)",
+    "Credibility & Verifiability of Claims (Are the metrics realistic?)",
+    "Red Flags (Unexplained gaps, suspicious overlap, vague titles)"
   ];
 
   return `
-You are an ATS-focused resume analyzer.
-You MUST return a single JSON object and nothing else (no markdown, no code fences).
+You are an uncompromising, highly analytical ATS (Applicant Tracking System) parser and expert technical recruiter.
+Your sole purpose is to evaluate the provided resume against the target role and output a STRICTLY formatted JSON object.
 
-Hard rules:
-- Only use evidence from the resume text.
-- Do not invent skills, employers, education, dates, or achievements.
-- "missing_keywords" should be reasonable keywords for the target role and common ATS terms, but should NOT be buzzword spam.
-- "recommendations_editable" are changes that can be made by rewriting/reformatting without requiring new facts.
-- "user_only_issues" are problems that require the user's input or verification (missing dates, unverifiable claims, unclear company names, etc.). These MUST NOT be auto-fixed later.
-- Provide scores per rubric (0-100 integers) and a short "notes" array per rubric.
+CRITICAL DIRECTIVES - FAILURE TO OBEY WILL RESULT IN SYSTEM ERROR:
+1. OUTPUT FORMAT: You MUST return ONLY valid JSON. Absolutely NO markdown formatting (do not use \`\`\`json), NO introductory text, NO conversational replies, and NO concluding remarks. The first character of your response must be '{' and the last must be '}'.
+2. ZERO HALLUCINATION: You are forbidden from inventing, assuming, or deducing any skills, experiences, dates, employers, or metrics not explicitly written in the resume text. Do not assume a skill based on a job title.
+3. HARSH BUT FAIR SCORING: Do not inflate scores. An average resume should score around 50-60. Only top-tier, perfectly optimized resumes should score 90+.
+4. CATEGORICAL SEPARATION:
+   - "missing_keywords": Must be highly specific hard skills, technical tools, or standard ATS terms directly relevant to the target role. No generic soft skills.
+   - "recommendations_editable": Actionable rewrites based ONLY on the text provided.
+   - "user_only_issues": Information gaps ONLY the user can fix.
 
-Schema:
+EXPECTED JSON SCHEMA:
 {
-  "overall_score_percent": number,
+  "overall_score_percent": <integer 0-100>,
+  "executive_summary": "<string: a ruthless 2-sentence summary of the resume's core weakness and strength>",
   "rubrics": [
-    { "name": string, "score_percent": number, "notes": string[] }
+    {
+      "name": "<string: EXACT rubric name from the list below>",
+      "score_percent": <integer 0-100>,
+      "critical_fail": <boolean: true if this area is severely damaging their chances>,
+      "notes": [
+        "<string: sharp, actionable observation>",
+        "<string: another observation>"
+      ]
+    }
   ],
-  "skills_present": string[],
-  "missing_keywords": string[],
-  "recommendations_editable": string[],
-  "user_only_issues": string[]
+  "skills_extracted": {
+    "hard_skills": ["<string>", "<string>"],
+    "soft_skills": ["<string>", "<string>"]
+  },
+  "missing_keywords": ["<string>", "<string>"],
+  "recommendations_editable": [
+    {
+      "original_text_reference": "<string: exact snippet of current resume>",
+      "suggested_fix": "<string: precise, actionable rewrite>"
+    }
+  ],
+  "user_only_issues": [
+    "<string: direct question to the user to fill a gap, e.g., 'What was the exact budget you managed here?'>"
+  ]
 }
 
-Target role (may be empty): ${targetRole ? JSON.stringify(targetRole) : "\"\""}
+TARGET ROLE (Evaluate strictly against this, if provided):
+${targetRole ? JSON.stringify(targetRole) : "\"General Professional (No specific role provided)\""}
 
-Rubrics to score (use these names exactly):
+RUBRICS TO SCORE (You must evaluate exactly these ${rubrics.length} rubrics):
 ${rubrics.map((r) => `- ${r}`).join("\n")}
 
-Resume text:
+RESUME TEXT TO ANALYZE:
+--- START RESUME ---
 ${resumeText}
+--- END RESUME ---
 `.trim();
 }
 
